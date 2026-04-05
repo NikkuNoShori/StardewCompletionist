@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useRecipeStore } from '../hooks/useRecipeStore';
-import { RECIPES, SEASON_ORDER, TYPE_ORDER, SOURCE_ORDER, SOURCE_LABELS } from '../data/recipes';
+import { SEASON_ORDER, TYPE_ORDER, SOURCE_ORDER, SOURCE_LABELS } from '../data/recipes';
 import { ICONS } from '../data/icons';
 import { useIsMobile } from '../hooks/useMediaQuery';
 
@@ -12,10 +12,10 @@ function parseSellPrice(s) {
 }
 
 export default function WikiTable() {
+  const recipes = useRecipeStore((s) => s.recipes);
   const checked = useRecipeStore((s) => s.checked);
   const currentFilter = useRecipeStore((s) => s.currentFilter);
   const searchQuery = useRecipeStore((s) => s.searchQuery);
-  const sortMode = useRecipeStore((s) => s.sortMode);
   const toggle = useRecipeStore((s) => s.toggle);
   const wikiSort = useRecipeStore((s) => s.wikiSort);
   const setWikiSort = useRecipeStore((s) => s.setWikiSort);
@@ -23,12 +23,12 @@ export default function WikiTable() {
 
   const sorted = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
-    const indices = RECIPES.map((_, i) => i).filter((i) => {
+    const indices = recipes.map((_, i) => i).filter((i) => {
       const isChecked = !!checked[i];
       if (currentFilter === 'remaining' && isChecked) return false;
       if (currentFilter === 'completed' && !isChecked) return false;
       if (q) {
-        const r = RECIPES[i];
+        const r = recipes[i];
         const txt = (r[0] + ' ' + r[1].join(' ') + ' ' + r[2] + ' ' + r[3] + ' ' + r[4] + ' ' + r[8]).toLowerCase();
         if (!txt.includes(q)) return false;
       }
@@ -40,7 +40,7 @@ export default function WikiTable() {
     const dir = direction === 'asc' ? 1 : -1;
 
     copy.sort((a, b) => {
-      const ra = RECIPES[a], rb = RECIPES[b];
+      const ra = recipes[a], rb = recipes[b];
       switch (column) {
         case 'name': return dir * ra[0].localeCompare(rb[0]);
         case 'energy': return dir * (ra[6] - rb[6]);
@@ -51,7 +51,7 @@ export default function WikiTable() {
       }
     });
     return copy;
-  }, [checked, currentFilter, searchQuery, wikiSort]);
+  }, [recipes, checked, currentFilter, searchQuery, wikiSort]);
 
   const sortArrow = (col) => {
     if (wikiSort.column !== col) return ' \u21D5';
@@ -63,23 +63,45 @@ export default function WikiTable() {
   if (isMobile) {
     return (
       <div className="wiki-cards">
+        <div className="wiki-sort-bar">
+          <span className="wiki-sort-label">Sort by</span>
+          {[
+            ['name', 'Name'],
+            ['energy', 'Energy'],
+            ['health', 'HP'],
+            ['sell', 'Sell'],
+            ['source', 'Source'],
+          ].map(([col, label]) => (
+            <button
+              key={col}
+              className={`wiki-sort-btn${wikiSort.column === col ? ' wiki-sort-active' : ''}`}
+              onClick={() => setWikiSort(col)}
+            >
+              {label}{wikiSort.column === col ? (wikiSort.direction === 'asc' ? ' \u2191' : ' \u2193') : ''}
+            </button>
+          ))}
+        </div>
         {sorted.map((i) => {
-          const r = RECIPES[i];
+          const r = recipes[i];
           const ic = getIcon(r[5]);
           return (
             <div key={i} className={`wiki-card${checked[i] ? ' chk' : ''}`} onClick={() => toggle(i)}>
-              <div className="wiki-card-top">
-                {ic && <img className="wicon" src={ic} alt="" />}
-                <span className="wname">{r[0]}</span>
+              <div className="wiki-card-row">
+                <div className="wiki-card-left">
+                  {ic && <img className="wicon" src={ic} alt="" />}
+                  <div className="wiki-card-info">
+                    <span className="wname">{r[0]}</span>
+                    <span className="wiki-card-src">{r[11] || SOURCE_LABELS[r[4]] || r[4]}</span>
+                  </div>
+                </div>
+                <div className="wiki-card-stats">
+                  <span className="wiki-stat wiki-stat-energy">{r[6]}E</span>
+                  <span className="wiki-stat wiki-stat-health">{r[7]}HP</span>
+                  <span className="wiki-stat wiki-stat-sell">{r[10]}</span>
+                </div>
               </div>
               <div className="wiki-card-ings">{r[1].join(', ')}</div>
-              <div className="wiki-card-stats">
-                <span className="wenergy">{r[6]}E</span>
-                <span className="whealth">{r[7]}HP</span>
-                <span className="wsell">{r[10]}</span>
-              </div>
-              {r[8] && <div className="wiki-card-buff">{r[8]}</div>}
-              <div className="wiki-card-src">{SOURCE_LABELS[r[4]] || r[4]}</div>
+              {r[8] && <div className="wiki-card-buff">{r[8]}{r[9] ? ` (${r[9]})` : ''}</div>}
             </div>
           );
         })}
@@ -103,8 +125,9 @@ export default function WikiTable() {
       </thead>
       <tbody>
         {sorted.map((i) => {
-          const r = RECIPES[i];
+          const r = recipes[i];
           const ic = getIcon(r[5]);
+          const buffDisplay = r[8] ? (r[9] ? `${r[8]} (${r[9]})` : r[8]) : '\u2014';
           return (
             <tr key={i} className={checked[i] ? 'chk' : ''} onClick={() => toggle(i)} style={{ cursor: 'pointer' }}>
               <td>{ic && <img className="wicon" src={ic} alt="" />}</td>
@@ -112,9 +135,9 @@ export default function WikiTable() {
               <td className="wings">{r[1].join(', ')}</td>
               <td className="wenergy">{r[6]}</td>
               <td className="whealth">{r[7]}</td>
-              <td className="wbuff">{r[8] || '—'}</td>
+              <td className="wbuff">{buffDisplay}</td>
               <td className="wsell">{r[10]}</td>
-              <td className="wsrc">{SOURCE_LABELS[r[4]] || r[4]}</td>
+              <td className="wsrc">{r[11] || SOURCE_LABELS[r[4]] || r[4]}</td>
             </tr>
           );
         })}

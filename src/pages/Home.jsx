@@ -15,25 +15,26 @@ export default function Home() {
   const currentTab = useRecipeStore((s) => s.currentTab);
 
   return (
-    <div className="container">
-      <UserMenu />
-      <Header />
-      {/* Desktop/tablet: tabs at top */}
-      <div className="tab-bar-top">
-        <TabBar />
+    <>
+      <div className="container">
+        <UserMenu />
+        <Header />
+        <div className="tab-bar-top">
+          <TabBar />
+        </div>
+        <FilterBar />
+        <ControlsBar />
+        <div className="panel">
+          {currentTab === 'recipes' && <RecipeList />}
+          {currentTab === 'ingredients' && <IngredientTable />}
+          {currentTab === 'wiki' && <WikiTable />}
+        </div>
+        <ActionButtons />
       </div>
-      <FilterBar />
-      <ControlsBar />
-      <div className="panel">
-        {currentTab === 'recipes' && <RecipeList />}
-        {currentTab === 'ingredients' && <IngredientTable />}
-        {currentTab === 'wiki' && <WikiTable />}
-      </div>
-      <ActionButtons />
-      {/* Mobile: fixed bottom tab bar */}
+      {/* Mobile: fixed bottom tab bar — outside container to avoid clipping */}
       <div className="tab-bar-bottom">
         <TabBar />
       </div>
-    </div>
+    </>
   );
 }

@@ -2,9 +2,10 @@ import { useRecipeStore } from '../hooks/useRecipeStore';
 
 export default function Header() {
   const checked = useRecipeStore((s) => s.checked);
+  const recipes = useRecipeStore((s) => s.recipes);
   const done = Object.values(checked).filter(Boolean).length;
-  const total = 81;
-  const pct = Math.round((done / total) * 100);
+  const total = recipes.length;
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
 
   return (
     <header className="header">
