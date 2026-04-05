@@ -22,7 +22,7 @@ export default function AuthModal({ onClose }) {
           </p>
           <pre className="modal-code">
 {`VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key`}
+VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY=your-publishable-key`}
           </pre>
           <p className="modal-msg">
             See <code>docs/ARCHITECTURE.md</code> for the full database schema and setup instructions.

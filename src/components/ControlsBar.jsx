@@ -15,6 +15,11 @@ export default function ControlsBar() {
           value={searchQuery}
           onChange={(e) => setSearch(e.target.value)}
         />
+        {searchQuery && (
+          <button className="search-clear" onClick={() => setSearch('')} aria-label="Clear search">
+            &times;
+          </button>
+        )}
       </div>
       <div className="sort-wrap">
         <select value={sortMode} onChange={(e) => setSort(e.target.value)}>

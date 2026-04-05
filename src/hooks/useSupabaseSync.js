@@ -18,20 +18,13 @@ export function useSupabaseSync() {
     }
 
     const loadProgress = async () => {
-      const { data, error } = await supabase
-        .from('recipe_progress')
-        .select('checked')
-        .eq('user_id', user.id)
-        .single();
+      const { data, error } = await supabase.rpc('get_progress');
 
-      if (data && !error) {
-        loadFromSupabase(data.checked);
-      } else if (error?.code === 'PGRST116') {
-        // No row yet — insert current state
-        await supabase.from('recipe_progress').insert({
-          user_id: user.id,
-          checked: checked,
-        });
+      if (!error && data && Object.keys(data).length > 0) {
+        loadFromSupabase(data);
+      } else if (!error) {
+        // No existing row — seed with current local state
+        await supabase.rpc('save_progress', { p_checked: checked });
       }
       initialLoadDone.current = true;
     };
@@ -45,13 +38,7 @@ export function useSupabaseSync() {
 
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {
-      await supabase
-        .from('recipe_progress')
-        .upsert({
-          user_id: user.id,
-          checked: checked,
-          updated_at: new Date().toISOString(),
-        }, { onConflict: 'user_id' });
+      await supabase.rpc('save_progress', { p_checked: checked });
     }, 1000);
 
     return () => {

@@ -18,7 +18,10 @@ export default function Home() {
     <div className="container">
       <UserMenu />
       <Header />
-      <TabBar />
+      {/* Desktop/tablet: tabs at top */}
+      <div className="tab-bar-top">
+        <TabBar />
+      </div>
       <FilterBar />
       <ControlsBar />
       <div className="panel">
@@ -27,6 +30,10 @@ export default function Home() {
         {currentTab === 'wiki' && <WikiTable />}
       </div>
       <ActionButtons />
+      {/* Mobile: fixed bottom tab bar */}
+      <div className="tab-bar-bottom">
+        <TabBar />
+      </div>
     </div>
   );
 }

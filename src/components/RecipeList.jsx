@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useRecipeStore } from '../hooks/useRecipeStore';
 import { RECIPES, SEASON_ORDER, TYPE_ORDER, SOURCE_ORDER, SOURCE_LABELS, seasonLabel } from '../data/recipes';
 import { ICONS } from '../data/icons';
+import { useIsMobile } from '../hooks/useMediaQuery';
 
 function getIcon(id) {
   return ICONS[String(id)] || '';
@@ -23,6 +24,9 @@ export default function RecipeList() {
   const searchQuery = useRecipeStore((s) => s.searchQuery);
   const sortMode = useRecipeStore((s) => s.sortMode);
   const toggle = useRecipeStore((s) => s.toggle);
+  const collapsedGroups = useRecipeStore((s) => s.collapsedGroups);
+  const toggleGroup = useRecipeStore((s) => s.toggleGroup);
+  const isMobile = useIsMobile();
 
   const filtered = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
@@ -51,39 +55,33 @@ export default function RecipeList() {
     return copy;
   }, [filtered, sortMode]);
 
+  // Group recipes by current sort mode
+  const groups = useMemo(() => {
+    if (sortMode === 'alpha') return null;
+
+    const groupMap = new Map();
+    sorted.forEach((i) => {
+      let gk;
+      if (sortMode === 'harvest') gk = RECIPES[i][2];
+      else if (sortMode === 'type') gk = RECIPES[i][3];
+      else if (sortMode === 'source') gk = RECIPES[i][4];
+      if (!groupMap.has(gk)) groupMap.set(gk, []);
+      groupMap.get(gk).push(i);
+    });
+    return groupMap;
+  }, [sorted, sortMode]);
+
   if (sorted.length === 0) {
     return <div className="empty">No recipes found</div>;
   }
 
-  const groupKey = (i) => {
-    if (sortMode === 'harvest') return RECIPES[i][2];
-    if (sortMode === 'type') return RECIPES[i][3];
-    if (sortMode === 'source') return RECIPES[i][4];
-    return null;
-  };
-
-  let lastGroup = null;
-  const elements = [];
-
-  sorted.forEach((i) => {
-    const gk = groupKey(i);
-    if (gk !== null && gk !== lastGroup) {
-      lastGroup = gk;
-      const label = sortMode === 'source' ? (SOURCE_LABELS[gk] || gk) : seasonLabel(gk);
-      elements.push(
-        <div key={`grp-${gk}`} className="group-hdr">
-          <span className={`sdot ${dotClass(gk, sortMode)}`} />
-          {label}
-        </div>
-      );
-    }
-
+  const renderRecipe = (i) => {
     const r = RECIPES[i];
     const isChecked = !!checked[i];
     const ic = getIcon(r[5]);
     const meta = sortMode === 'alpha' ? `${seasonLabel(r[2])} · ${r[3]}${r[8] ? ` · ${r[8]}` : ''}` : '';
 
-    elements.push(
+    return (
       <div key={i} className={`rc${isChecked ? ' chk' : ''}`} onClick={() => toggle(i)}>
         <div className="cb">
           <svg className="ck" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -100,7 +98,44 @@ export default function RecipeList() {
         </div>
       </div>
     );
-  });
+  };
 
-  return <>{elements}</>;
+  // Flat list for alphabetical
+  if (!groups) {
+    return <>{sorted.map(renderRecipe)}</>;
+  }
+
+  // Grouped list with collapsible sections
+  return (
+    <>
+      {Array.from(groups.entries()).map(([gk, indices]) => {
+        const key = `${sortMode}:${gk}`;
+        const isCollapsed = collapsedGroups[key] ?? isMobile;
+        const label = sortMode === 'source' ? (SOURCE_LABELS[gk] || gk) : seasonLabel(gk);
+        const doneInGroup = indices.filter((i) => !!checked[i]).length;
+
+        return (
+          <div key={key} className="collapsible-group">
+            <div
+              className="group-hdr"
+              onClick={() => toggleGroup(gk)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleGroup(gk); } }}
+            >
+              <span className={`chevron ${isCollapsed ? '' : 'chevron-open'}`}>&#9654;</span>
+              <span className={`sdot ${dotClass(gk, sortMode)}`} />
+              <span className="group-label">{label}</span>
+              <span className="group-count">{doneInGroup}/{indices.length}</span>
+            </div>
+            {!isCollapsed && (
+              <div className="group-items">
+                {indices.map(renderRecipe)}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </>
+  );
 }

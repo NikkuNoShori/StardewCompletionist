@@ -22,6 +22,8 @@ export const useRecipeStore = create(
       searchQuery: '',
       sortMode: 'alpha',        // 'alpha' | 'harvest' | 'type' | 'source'
       ingredientSort: { column: 'name', direction: 'asc' },
+      wikiSort: { column: 'name', direction: 'asc' },
+      collapsedGroups: {},       // keyed by "sortMode:groupKey" -> boolean
 
       // Actions
       toggle: (idx) => set((state) => {
@@ -45,6 +47,17 @@ export const useRecipeStore = create(
         }
         return { ingredientSort: { column, direction: column === 'qty' ? 'desc' : 'asc' } };
       }),
+      setWikiSort: (column) => set((state) => {
+        const prev = state.wikiSort;
+        if (prev.column === column) {
+          return { wikiSort: { column, direction: prev.direction === 'asc' ? 'desc' : 'asc' } };
+        }
+        return { wikiSort: { column, direction: column === 'energy' || column === 'health' || column === 'sell' ? 'desc' : 'asc' } };
+      }),
+      toggleGroup: (groupKey) => set((state) => {
+        const key = `${state.sortMode}:${groupKey}`;
+        return { collapsedGroups: { ...state.collapsedGroups, [key]: !state.collapsedGroups[key] } };
+      }),
 
       resetAll: () => set({ checked: {} }),
       checkAll: () => {
@@ -63,7 +76,15 @@ export const useRecipeStore = create(
     }),
     {
       name: 'sdv-recipes-store',
-      partialize: (state) => ({ checked: state.checked }),
+      partialize: (state) => ({
+        checked: state.checked,
+        currentTab: state.currentTab,
+        currentFilter: state.currentFilter,
+        sortMode: state.sortMode,
+        ingredientSort: state.ingredientSort,
+        wikiSort: state.wikiSort,
+        collapsedGroups: state.collapsedGroups,
+      }),
     }
   )
 );
