@@ -20,7 +20,17 @@
       "Bash(git stash:*)",
       "Bash(wc -l *.js)",
       "Bash(grep -n \"grouped.length === 0\" /c/dev/stardewcooking/src/pages/*.jsx)",
-      "Bash(ls /c/dev/stardewcooking/supabase/migrations/*.sql)"
+      "Bash(ls /c/dev/stardewcooking/supabase/migrations/*.sql)",
+      "Read(//dev/stardewcooking/src/**)",
+      "Read(//c/dev/stardewcooking/src/**)",
+      "Read(//dev/stardewcooking/src/components/**)",
+      "Read(//c/dev/stardewcooking/src/components/**)",
+      "Read(//dev/stardewcooking/src/hooks/**)",
+      "Read(//c/dev/stardewcooking/src/hooks/**)",
+      "Read(//dev/stardewcooking/supabase/migrations/**)",
+      "Read(//c/dev/stardewcooking/supabase/migrations/**)",
+      "Bash(node -e \"const {ICONS} = require\\('./src/data/icons.js'\\); console.log\\('Total icons:', Object.keys\\(ICONS\\).length\\); console.log\\('IDs:', Object.keys\\(ICONS\\).sort\\(\\(a,b\\) => a-b\\).join\\(', '\\)\\)\")",
+      "Bash(node -e \"import\\('./src/data/icons.js'\\).then\\(m => { console.log\\('Total:', Object.keys\\(m.ICONS\\).length\\); console.log\\('IDs:', Object.keys\\(m.ICONS\\).sort\\(\\(a,b\\)=>a-b\\).join\\(', '\\)\\); }\\)\")"
     ]
   }
 }
