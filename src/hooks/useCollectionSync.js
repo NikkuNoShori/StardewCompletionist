@@ -9,6 +9,9 @@ export function useCollectionSync() {
   const loadFromSupabase = useCollectionStore((s) => s.loadFromSupabase);
 
   // Subscribe to all checked maps for save triggers
+  const recipeChecked = useCollectionStore((s) => s.recipeChecked);
+  const ingredientsChecked = useCollectionStore((s) => s.ingredientsChecked);
+  const bundleChecked = useCollectionStore((s) => s.bundleChecked);
   const fishChecked = useCollectionStore((s) => s.fishChecked);
   const museumChecked = useCollectionStore((s) => s.museumChecked);
   const shippingChecked = useCollectionStore((s) => s.shippingChecked);
@@ -58,6 +61,7 @@ export function useCollectionSync() {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
   }, [
+    recipeChecked, ingredientsChecked, bundleChecked,
     fishChecked, museumChecked, shippingChecked, craftingChecked,
     walnutChecked, stardropChecked, secretNoteChecked, journalScrapChecked,
     fieldOfficeChecked, monsterChecked, user,

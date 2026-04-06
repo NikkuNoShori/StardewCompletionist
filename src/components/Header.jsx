@@ -1,7 +1,8 @@
 import { useRecipeStore } from '../hooks/useRecipeStore';
+import { useCollectionStore } from '../hooks/useCollectionStore';
 
 export default function Header() {
-  const checked = useRecipeStore((s) => s.checked);
+  const checked = useCollectionStore((s) => s.recipeChecked);
   const recipes = useRecipeStore((s) => s.recipes);
   const done = Object.values(checked).filter(Boolean).length;
   const total = recipes.length;

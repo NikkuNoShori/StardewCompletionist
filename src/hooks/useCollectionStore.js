@@ -5,6 +5,9 @@ export const useCollectionStore = create(
   persist(
     (set, get) => ({
       // Checked states for each tracker — keyed by unique item identifier
+      recipeChecked: {},
+      ingredientsChecked: {},
+      bundleChecked: {},
       fishChecked: {},
       museumChecked: {},
       shippingChecked: {},
@@ -58,10 +61,11 @@ export const useCollectionStore = create(
       // Helpers
       getCount: (storeKey) => Object.keys(get()[storeKey]).length,
 
-      // Supabase sync
+      // Supabase sync — load all progress from DB
       loadFromSupabase: (data) => {
         const update = {};
         const keys = [
+          'recipeChecked', 'ingredientsChecked', 'bundleChecked',
           'fishChecked', 'museumChecked', 'shippingChecked', 'craftingChecked',
           'walnutChecked', 'stardropChecked', 'secretNoteChecked', 'journalScrapChecked',
           'fieldOfficeChecked', 'monsterChecked',
@@ -75,6 +79,9 @@ export const useCollectionStore = create(
       getAllChecked: () => {
         const s = get();
         return {
+          recipeChecked: s.recipeChecked,
+          ingredientsChecked: s.ingredientsChecked,
+          bundleChecked: s.bundleChecked,
           fishChecked: s.fishChecked,
           museumChecked: s.museumChecked,
           shippingChecked: s.shippingChecked,
@@ -91,6 +98,9 @@ export const useCollectionStore = create(
     {
       name: 'sdv-collections-store',
       partialize: (state) => ({
+        recipeChecked: state.recipeChecked,
+        ingredientsChecked: state.ingredientsChecked,
+        bundleChecked: state.bundleChecked,
         fishChecked: state.fishChecked,
         museumChecked: state.museumChecked,
         shippingChecked: state.shippingChecked,
