@@ -72,7 +72,7 @@ export default function Sidebar({ isOpen, onClose }) {
           <Junimo color="#66bb6a" size={28} />
           <div className="sidebar-logo-text">
             <span className="sidebar-title">Stardew</span>
-            <span className="sidebar-title">Cooking</span>
+            <span className="sidebar-title">Completionist</span>
           </div>
           <Junimo color="#e57373" size={28} />
         </div>
