@@ -851,9 +851,15 @@ h1 {
 .iname { font-weight: 700; font-size: .9rem; color: var(--wood-darker); }
 .iqty-cell { text-align: center; }
 .iqty {
-  font-family: 'VT323', monospace; font-size: 1.3rem;
-  color: var(--gold); background: var(--wood-dark); padding: 2px 14px;
-  border-radius: 6px; display: inline-block; min-width: 36px; text-align: center;
+  font-family: 'VT323', monospace;
+  font-size: 1.3rem;
+  color: var(--text-dark);
+  display: inline;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  min-width: 0;
+  text-align: center;
 }
 .irec { font-size: .73rem; color: var(--wood); text-align: right; line-height: 1.3; }
 

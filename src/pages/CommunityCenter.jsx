@@ -323,6 +323,7 @@ function OverallProgress() {
 
 function NeededItemsTable({ rooms }) {
   const bundleChecked = useCollectionStore((s) => s.bundleChecked);
+  const toggleBundleItem = useBundleStore((s) => s.toggleBundleItem);
   const [sortState, setSortState] = useState({ column: 'name', direction: 'asc' });
 
   const rows = useMemo(() => {
@@ -340,6 +341,7 @@ function NeededItemsTable({ rooms }) {
               name,
               requiredQty: 0,
               optionalQty: 0,
+              totalQty: 0,
               checkedCount: 0,
               totalCount: 0,
               qualities: new Set(),
@@ -347,11 +349,13 @@ function NeededItemsTable({ rooms }) {
               seasons: new Set(),
               categories: new Set(),
               bundles: new Set(),
+              instances: [],
             });
           }
           const row = byName.get(name);
           if (isPickBundle) row.optionalQty += qty;
           else row.requiredQty += qty;
+          row.totalQty += qty;
           row.totalCount += 1;
           if (checked) row.checkedCount += 1;
           if (quality > 0) row.qualities.add(QUALITY_LABELS[quality]);
@@ -359,6 +363,12 @@ function NeededItemsTable({ rooms }) {
           seasons.forEach((s) => row.seasons.add(s));
           row.categories.add(category);
           row.bundles.add(bundle.name);
+          row.instances.push({
+            roomKey: room.key,
+            bundleName: bundle.name,
+            itemName: name,
+            checked,
+          });
         });
       });
     });
@@ -387,7 +397,7 @@ function NeededItemsTable({ rooms }) {
           <th className="fish-th-sort" onClick={() => toggleTableSort(setSortState, 'name')}>Item{sortArrow(sortState, 'name')}</th>
           <th className="fish-th-sort" onClick={() => toggleTableSort(setSortState, 'qty')}>
             <span className="cc-th-with-tip">
-              Qty Needed{sortArrow(sortState, 'qty')}
+              Qty{sortArrow(sortState, 'qty')}
               <span className="cc-help-tip-wrap">
                 <button
                   type="button"
@@ -401,9 +411,9 @@ function NeededItemsTable({ rooms }) {
                   ?
                 </button>
                 <span className="cc-help-tip-pop">
-                  Number shown is required quantity.
+                  Qty is total across all matching bundles in this scope.
                   <br />
-                  <strong>+ optional</strong> means this item can also be used in a pick-one bundle.
+                  <strong>optional</strong> means part of that total comes from pick-one bundles.
                 </span>
               </span>
             </span>
@@ -413,15 +423,30 @@ function NeededItemsTable({ rooms }) {
           <th className="fish-th-sort" onClick={() => toggleTableSort(setSortState, 'season')}>Season{sortArrow(sortState, 'season')}</th>
           <th className="fish-th-sort" onClick={() => toggleTableSort(setSortState, 'category')}>Category{sortArrow(sortState, 'category')}</th>
           <th className="fish-th-sort" onClick={() => toggleTableSort(setSortState, 'bundles')}>Used In{sortArrow(sortState, 'bundles')}</th>
-          <th className="fish-th-sort" onClick={() => toggleTableSort(setSortState, 'progress')}>Progress{sortArrow(sortState, 'progress')}</th>
+          <th className="fish-th-sort" onClick={() => toggleTableSort(setSortState, 'progress')}>Marked{sortArrow(sortState, 'progress')}</th>
           </tr>
         </thead>
         <tbody>
           {rows.map((row) => (
-            <tr key={row.name} className={row.checkedCount === row.totalCount ? 'chk' : ''}>
+            <tr
+              key={row.name}
+              className={row.checkedCount === row.totalCount ? 'chk' : ''}
+              onClick={() => {
+                const allMarked = row.checkedCount === row.totalCount;
+                row.instances.forEach((inst) => {
+                  if (allMarked && inst.checked) {
+                    toggleBundleItem(inst.roomKey, inst.bundleName, inst.itemName);
+                  } else if (!allMarked && !inst.checked) {
+                    toggleBundleItem(inst.roomKey, inst.bundleName, inst.itemName);
+                  }
+                });
+              }}
+              style={{ cursor: 'pointer' }}
+              title={row.checkedCount === row.totalCount ? 'Unmark all instances for this item' : 'Mark all instances for this item'}
+            >
               <td className="fish-grid-name">{row.name}</td>
               <td>
-                {row.requiredQty > 0 ? row.requiredQty : '—'}
+                {row.totalQty > 0 ? row.totalQty : '—'}
                 {row.optionalQty > 0 ? <span className="cc-needed-optional"> (+{row.optionalQty} optional)</span> : null}
               </td>
               <td>{row.qualityLabel}</td>
@@ -471,7 +496,7 @@ function sortNeededRows(rows, sortState) {
   const copy = [...rows];
   copy.sort((a, b) => {
     switch (sortState.column) {
-      case 'qty': return (a.requiredQty + a.optionalQty) - (b.requiredQty + b.optionalQty);
+      case 'qty': return a.totalQty - b.totalQty;
       case 'quality': return a.qualityLabel.localeCompare(b.qualityLabel);
       case 'source': return a.sourceLabel.localeCompare(b.sourceLabel);
       case 'season': return a.seasonLabel.localeCompare(b.seasonLabel);
