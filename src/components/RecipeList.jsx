@@ -2,12 +2,7 @@ import { useMemo } from 'react';
 import { useRecipeStore } from '../hooks/useRecipeStore';
 import { useCollectionStore } from '../hooks/useCollectionStore';
 import { SEASON_ORDER, TYPE_ORDER, SOURCE_ORDER, SOURCE_LABELS, seasonLabel } from '../data/recipes';
-import { ICONS } from '../data/icons';
 import { useIsMobile } from '../hooks/useMediaQuery';
-
-function getIcon(id) {
-  return ICONS[String(id)] || '';
-}
 
 function dotClass(key, mode) {
   if (mode === 'harvest') {
@@ -78,36 +73,24 @@ export default function RecipeList() {
     return <div className="empty">No recipes found</div>;
   }
 
-  const renderRecipe = (i) => {
+  const renderRecipeRow = (i) => {
     const r = recipes[i];
     const isChecked = !!checked[i];
-    const ic = getIcon(r[5]);
-    const meta = sortMode === 'alpha' ? `${seasonLabel(r[2])} · ${r[3]}` : '';
-    const sourceDetail = r[11] || '';
-    const buffText = r[8];
-    const buffDur = r[9];
+    const buffText = r[8] ? (r[9] ? `${r[8]} (${r[9]})` : r[8]) : '—';
 
     return (
-      <div key={i} className={`rc${isChecked ? ' chk' : ''}`}>
-        <div className="cb" onClick={() => toggle(i)}>
-          <svg className="ck" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M5 13l4 4L19 7" />
-          </svg>
-        </div>
-        {ic && <img className="ricon" src={ic} alt="" onClick={() => toggle(i)} />}
-        <div className="ri" onClick={() => toggle(i)}>
-          <div className="rn">{r[0]}</div>
-          <div className="rm">
-            {meta && <span>{meta}</span>}
-            {sourceDetail && <span className="rm-src">{sourceDetail}</span>}
+      <tr key={i} className={isChecked ? 'chk' : ''} onClick={() => toggle(i)} style={{ cursor: 'pointer' }}>
+        <td>
+          <div className={`recipe-grid-check${isChecked ? ' checked' : ''}`}>
+            <svg className="ck" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 13l4 4L19 7" />
+            </svg>
           </div>
-          {buffText && (
-            <div className="rm-buff">
-              {buffText}{buffDur ? ` (${buffDur})` : ''}
-            </div>
-          )}
-        </div>
-        <div className="rg-wrap">
+        </td>
+        <td className="recipe-grid-name">{r[0]}</td>
+        <td className="recipe-grid-source">{r[11] || SOURCE_LABELS[r[4]] || r[4]}</td>
+        <td>{seasonLabel(r[2])}</td>
+        <td className="recipe-grid-ings">
           {r[1].map((ing, j) => {
             const ingKey = `${i}:${ing}`;
             const ingChecked = !!ingredientsChecked[ingKey];
@@ -125,13 +108,36 @@ export default function RecipeList() {
               </span>
             );
           })}
-        </div>
-      </div>
+        </td>
+        <td>{r[3]}</td>
+        <td>{buffText}</td>
+        <td className="wsell">{r[10]}</td>
+      </tr>
     );
   };
 
+  const renderRecipeTable = (indices) => (
+    <table className="recipe-grid-tbl">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Name</th>
+          <th>Source</th>
+          <th>Season</th>
+          <th>Ingredients</th>
+          <th>Type</th>
+          <th>Buffs</th>
+          <th>Sell</th>
+        </tr>
+      </thead>
+      <tbody>
+        {indices.map(renderRecipeRow)}
+      </tbody>
+    </table>
+  );
+
   if (!groups) {
-    return <>{sorted.map(renderRecipe)}</>;
+    return renderRecipeTable(sorted);
   }
 
   return (
@@ -158,7 +164,7 @@ export default function RecipeList() {
             </div>
             {!isCollapsed && (
               <div className="group-items">
-                {indices.map(renderRecipe)}
+                {renderRecipeTable(indices)}
               </div>
             )}
           </div>

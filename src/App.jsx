@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { ProfessionProvider } from './context/ProfessionContext';
+import ProfessionConfigurator from './components/ProfessionConfigurator';
 import Sidebar from './components/Sidebar';
 import Home from './pages/Home';
 import CommunityCenter from './pages/CommunityCenter';
@@ -28,9 +30,12 @@ function Layout() {
         <span /><span /><span />
       </button>
 
+      <ProfessionConfigurator />
+
       <main className="main-content">
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/cooking" element={<Home />} />
           <Route path="/community-center" element={<CommunityCenter />} />
           <Route path="/fish" element={<FishPage />} />
           <Route path="/museum" element={<MuseumPage />} />
@@ -40,6 +45,17 @@ function Layout() {
           <Route path="/misc" element={<MiscPage />} />
           <Route path="/spawn-codes" element={<SpawnCodesPage />} />
         </Routes>
+        <footer className="app-disclaimer">
+          This fan-made app references data and community content from the
+          {' '}
+          <a href="https://stardewvalleywiki.com" target="_blank" rel="noreferrer">Stardew Valley Wiki</a>
+          {' '}
+          (licensed under
+          {' '}
+          <a href="https://stardewvalleywiki.com/Stardew_Valley_Wiki:Copyrights" target="_blank" rel="noreferrer">CC BY-NC-SA 3.0</a>
+          ).
+          Stardew Valley names, images, and game assets are property of ConcernedApe and respective licensors.
+        </footer>
       </main>
     </div>
   );
@@ -48,9 +64,11 @@ function Layout() {
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <Layout />
-      </BrowserRouter>
+      <ProfessionProvider>
+        <BrowserRouter>
+          <Layout />
+        </BrowserRouter>
+      </ProfessionProvider>
     </AuthProvider>
   );
 }

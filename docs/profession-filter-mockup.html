@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profession Popout Mockup</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=VT323&family=Nunito:wght@400;600;700;800&display=swap');
+    :root {
+      --bg-forest: #2c5a1e;
+      --bg-forest-light: #3a7028;
+      --parchment: #fdf6e3;
+      --parchment-hover: #f5efe6;
+      --parchment-dark: #e8e0d4;
+      --wood: #8d6e63;
+      --wood-dark: #5d4037;
+      --wood-darker: #4e342e;
+      --text-dark: #3e2723;
+      --text-brown: #6d4c41;
+      --text-muted: #a1887f;
+      --gold: #f9a825;
+      --gold-light: #ffcc02;
+      --green-check: #66bb6a;
+      --green-check-dark: #43a047;
+      --sell-gold: #c9980a;
+      --line: #d7ccc8;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Nunito', sans-serif;
+      background: var(--bg-forest);
+      background-image:
+        radial-gradient(ellipse at 20% 50%, var(--bg-forest-light) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, var(--bg-forest-light) 0%, transparent 50%);
+      color: var(--text-dark);
+    }
+    .page {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .title h1 {
+      margin: 0;
+      font-size: 26px;
+    }
+    .title p {
+      margin: 4px 0 0;
+      color: #c8e6c9;
+    }
+    .btn {
+      border: 2px solid var(--wood-darker);
+      background: var(--wood-dark);
+      color: #fff8e1;
+      border-radius: 8px;
+      padding: 9px 12px;
+      font-family: 'VT323', monospace;
+      font-size: 1.15rem;
+      letter-spacing: .5px;
+      cursor: default;
+      box-shadow: 2px 2px 0 var(--wood-darker);
+    }
+    .btn strong { color: var(--gold); }
+    .shell {
+      position: relative;
+      border: 3px solid var(--wood);
+      background: var(--parchment);
+      border-radius: 12px;
+      padding: 16px;
+      min-height: 520px;
+      box-shadow: 2px 3px 0 var(--wood-darker);
+    }
+    .hint {
+      margin: 0 0 12px;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--parchment);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    th, td {
+      border-bottom: 1px solid var(--parchment-dark);
+      padding: 10px 8px;
+      text-align: left;
+      font-size: 14px;
+    }
+    th {
+      color: var(--gold);
+      font-weight: 700;
+      background: var(--wood-dark);
+      font-family: 'VT323', monospace;
+      font-size: 1rem;
+    }
+    .price {
+      color: var(--sell-gold);
+      font-weight: 700;
+      position: relative;
+      display: inline-block;
+      border-bottom: 1px dashed var(--wood);
+      cursor: default;
+    }
+    .price:hover .tip {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+    .tip {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(4px);
+      transition: all 140ms ease;
+      position: absolute;
+      z-index: 4;
+      top: 24px;
+      left: 0;
+      width: 280px;
+      border: 2px solid var(--wood);
+      border-radius: 10px;
+      background: var(--parchment);
+      padding: 10px;
+      color: var(--text-dark);
+      box-shadow: 2px 3px 0 var(--wood-darker);
+    }
+    .tip h4 {
+      margin: 0 0 8px;
+      font-size: 13px;
+      color: var(--wood-dark);
+    }
+    .tip p {
+      margin: 4px 0;
+      font-size: 13px;
+      color: var(--text-brown);
+    }
+    .tip .delta { color: var(--green-check-dark); font-weight: 700; }
+
+    /* Popout */
+    .popout {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 350px;
+      border: 3px solid var(--wood);
+      border-radius: 12px;
+      background: var(--parchment);
+      box-shadow: 2px 3px 0 var(--wood-darker);
+      overflow: hidden;
+    }
+    .popout-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      border-bottom: 2px solid var(--wood);
+      background: var(--wood-dark);
+    }
+    .popout-head h3 {
+      margin: 0;
+      font-size: 1.1rem;
+      font-family: 'VT323', monospace;
+      color: var(--gold);
+    }
+    .popout-body {
+      padding: 10px 12px 12px;
+    }
+    .skill {
+      border: 2px solid var(--parchment-dark);
+      border-radius: 10px;
+      padding: 8px;
+      margin-bottom: 8px;
+      background: var(--parchment-hover);
+    }
+    .skill h4 {
+      margin: 0 0 7px;
+      font-size: 13px;
+      color: var(--wood-dark);
+      font-family: 'VT323', monospace;
+      font-size: 1rem;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    label {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: block;
+      margin-bottom: 3px;
+    }
+    select {
+      width: 100%;
+      border: 2px solid var(--parchment-dark);
+      background: #fff;
+      color: var(--wood-darker);
+      border-radius: 8px;
+      padding: 7px;
+      font-size: 13px;
+    }
+    .popout-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .mini {
+      border: 2px solid var(--wood-dark);
+      border-radius: 8px;
+      background: var(--wood);
+      color: #fff8e1;
+      padding: 7px 10px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .note {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 8px;
+      line-height: 1.4;
+    }
+    .topbar h1 {
+      font-family: 'VT323', monospace;
+      color: #fff8e1;
+      text-shadow: 3px 3px 0 var(--wood-dark), -1px -1px 0 var(--wood-dark);
+      letter-spacing: 1px;
+    }
+    tbody tr:hover { background: var(--parchment-hover); }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <div class="title">
+        <h1>Fish Collection</h1>
+        <p>Adjusted price replaces base price. Hover a price to see breakdown.</p>
+      </div>
+      <button class="btn">Professions <strong>open</strong></button>
+    </div>
+
+    <div class="shell">
+      <p class="hint">This is the in-page experience: configure professions in a top-right popout, then lists update in place.</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 30%;">Item</th>
+            <th>Category</th>
+            <th>Location</th>
+            <th style="width: 22%;">Sell Price</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Blobfish</td>
+            <td>Fish</td>
+            <td>Night Market</td>
+            <td>
+              <span class="price">750g
+                <span class="tip">
+                  <h4>Price breakdown</h4>
+                  <p>Base: 500g</p>
+                  <p>Angler: +50% (x1.50)</p>
+                  <p class="delta">Final: 750g (+250g)</p>
+                </span>
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td>Lava Eel</td>
+            <td>Fish</td>
+            <td>Mines</td>
+            <td>
+              <span class="price">1050g
+                <span class="tip">
+                  <h4>Price breakdown</h4>
+                  <p>Base: 700g</p>
+                  <p>Angler: +50% (x1.50)</p>
+                  <p class="delta">Final: 1050g (+350g)</p>
+                </span>
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td>Wine</td>
+            <td>Artisan Good</td>
+            <td>Keg</td>
+            <td>
+              <span class="price">560g
+                <span class="tip">
+                  <h4>Price breakdown</h4>
+                  <p>Base: 400g</p>
+                  <p>Artisan: +40% (x1.40)</p>
+                  <p class="delta">Final: 560g (+160g)</p>
+                </span>
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td>Diamond</td>
+            <td>Mineral</td>
+            <td>Mines</td>
+            <td>
+              <span class="price">975g
+                <span class="tip">
+                  <h4>Price breakdown</h4>
+                  <p>Base: 750g</p>
+                  <p>Gemologist: +30% (x1.30)</p>
+                  <p class="delta">Final: 975g (+225g)</p>
+                </span>
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td>Prismatic Shard</td>
+            <td>Mineral</td>
+            <td>Mines</td>
+            <td>
+              <span class="price">2600g
+                <span class="tip">
+                  <h4>Price breakdown</h4>
+                  <p>Base: 2000g</p>
+                  <p>Gemologist: +30% (x1.30)</p>
+                  <p class="delta">Final: 2600g (+600g)</p>
+                </span>
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <aside class="popout">
+        <div class="popout-head">
+          <h3>Profession Setup (Canonical)</h3>
+          <span style="color: var(--parchment-dark); font-size: 12px;">Close</span>
+        </div>
+        <div class="popout-body">
+          <div class="skill">
+            <h4>Fishing</h4>
+            <div class="row">
+              <div>
+                <label>Level 5</label>
+                <select>
+                  <option>Fisher</option>
+                  <option>Trapper</option>
+                </select>
+              </div>
+              <div>
+                <label>Level 10</label>
+                <select>
+                  <option>Angler</option>
+                  <option>Pirate</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="skill">
+            <h4>Farming</h4>
+            <div class="row">
+              <div>
+                <label>Level 5</label>
+                <select>
+                  <option>Tiller</option>
+                  <option>Rancher</option>
+                </select>
+              </div>
+              <div>
+                <label>Level 10</label>
+                <select>
+                  <option>Artisan</option>
+                  <option>Agriculturist</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="skill">
+            <h4>Mining</h4>
+            <div class="row">
+              <div>
+                <label>Level 5</label>
+                <select>
+                  <option>Geologist</option>
+                  <option>Miner</option>
+                </select>
+              </div>
+              <div>
+                <label>Level 10</label>
+                <select>
+                  <option>Gemologist</option>
+                  <option>Excavator</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="popout-actions">
+            <button class="mini">Apply</button>
+            <button class="mini">Reset</button>
+          </div>
+
+          <p class="note">
+            The list shows adjusted prices only. Hover any price for base value, applied profession bonuses, and total delta.
+          </p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</body>
+</html>

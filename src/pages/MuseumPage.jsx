@@ -2,6 +2,12 @@ import { useMemo } from 'react';
 import { useCollectionStore } from '../hooks/useCollectionStore';
 import { useCollectionSync } from '../hooks/useCollectionSync';
 import { MUSEUM_ITEMS } from '../data/museum';
+import { useProfession } from '../context/ProfessionContext';
+import {
+  createProfessionPricePredicate,
+  getPriceDisplay,
+} from '../utils/professionPricing';
+import PriceWithTooltip from '../components/PriceWithTooltip';
 import {
   CollectionHeader, CollectionControls, SectionHeader,
   CollectionItem, useFilteredItems,
@@ -20,6 +26,14 @@ export default function MuseumPage() {
   const toggleItem = useCollectionStore((s) => s.toggleItem);
   const sortModes = useCollectionStore((s) => s.sortModes);
   const sort = sortModes['museum'] || 'type';
+  const { selection, priceFilterMode } = useProfession();
+  const professionPredicate = useMemo(
+    () => createProfessionPricePredicate(
+      priceFilterMode,
+      (item) => getPriceDisplay(item.price ?? 0, item, selection),
+    ),
+    [priceFilterMode, selection],
+  );
 
   const done = Object.keys(museumChecked).length;
   const total = MUSEUM_ITEMS.length;
@@ -28,6 +42,7 @@ export default function MuseumPage() {
     MUSEUM_ITEMS, 'museum', 'museumChecked',
     (m) => m.name,
     (m) => `${m.name} ${m.source} ${m.altSources || ''} ${m.category}`,
+    { extraPredicate: professionPredicate },
   );
 
   const grouped = useMemo(() => {
@@ -65,7 +80,13 @@ export default function MuseumPage() {
                 total={items.length}
                 defaultOpen={true}
               />
-              <SectionItems items={items} museumChecked={museumChecked} toggleItem={toggleItem} sectionKey={`museum:${group}`} />
+              <SectionItems
+                items={items}
+                museumChecked={museumChecked}
+                toggleItem={toggleItem}
+                sectionKey={`museum:${group}`}
+                professionSelection={selection}
+              />
             </div>
           );
         })}
@@ -75,18 +96,26 @@ export default function MuseumPage() {
   );
 }
 
-function SectionItems({ items, museumChecked, toggleItem, sectionKey }) {
+function SectionItems({ items, museumChecked, toggleItem, sectionKey, professionSelection }) {
   const collapsed = useCollectionStore((s) => s.collapsedSections);
   if (collapsed[sectionKey]) return null;
 
-  return items.map((item) => (
+  return items.map((item) => {
+    return (
     <CollectionItem
       key={item.name}
       checked={!!museumChecked[item.name]}
       onClick={() => toggleItem('museumChecked', item.name)}
       name={item.name}
       extra={
-        item.price ? <span className="fish-price">{item.price}g</span> : null
+        item.price ? (
+          <PriceWithTooltip
+            value={item.price}
+            item={item}
+            selection={professionSelection}
+            className="fish-price"
+          />
+        ) : null
       }
       meta={
         <>
@@ -96,5 +125,6 @@ function SectionItems({ items, museumChecked, toggleItem, sectionKey }) {
       }
       detail={item.tip}
     />
-  ));
+    );
+  });
 }

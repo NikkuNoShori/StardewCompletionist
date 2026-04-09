@@ -3,22 +3,17 @@ import { useAuth } from '../context/AuthContext';
 import { useState } from 'react';
 import AuthModal from './AuthModal';
 
-// Junimo SVG — a cute little spirit
+// Decorative custom SVG mascots (not game asset extracts)
 function Junimo({ color = '#66bb6a', size = 20 }) {
   return (
     <svg viewBox="0 0 24 28" width={size} height={size} className="junimo" aria-hidden="true">
-      {/* antenna */}
       <path d="M12 2 Q14 0 15 3" stroke={color} strokeWidth="1.5" fill="none" strokeLinecap="round" />
       <circle cx="15" cy="3.5" r="1.2" fill={color} />
-      {/* body */}
       <ellipse cx="12" cy="16" rx="9" ry="10" fill={color} />
-      {/* eyes */}
       <ellipse cx="9" cy="14" rx="1.8" ry="2.2" fill="#1a1a1a" />
       <ellipse cx="15" cy="14" rx="1.8" ry="2.2" fill="#1a1a1a" />
-      {/* eye shine */}
       <circle cx="9.8" cy="13.2" r=".7" fill="#fff" />
       <circle cx="15.8" cy="13.2" r=".7" fill="#fff" />
-      {/* feet */}
       <ellipse cx="8" cy="25" rx="3" ry="2" fill={color} />
       <ellipse cx="16" cy="25" rx="3" ry="2" fill={color} />
     </svg>
@@ -26,99 +21,15 @@ function Junimo({ color = '#66bb6a', size = 20 }) {
 }
 
 const NAV_ITEMS = [
-  {
-    key: '/',
-    label: 'Cooking',
-    icon: (
-      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 2C6.48 2 2 6 2 10c0 2.5 1.5 4.5 3 6v4a1 1 0 001 1h12a1 1 0 001-1v-4c1.5-1.5 3-3.5 3-6 0-4-4.48-8-10-8z" />
-        <path d="M8 21v-2h8v2" />
-      </svg>
-    ),
-  },
-  {
-    key: '/community-center',
-    label: 'Bundles',
-    icon: (
-      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 21V9l9-7 9 7v12" />
-        <path d="M9 21V13h6v8" />
-        <path d="M1 10l11-8 11 8" />
-        <circle cx="12" cy="9" r="1.5" fill="currentColor" />
-      </svg>
-    ),
-  },
-  {
-    key: '/fish',
-    label: 'Fish',
-    icon: (
-      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M6.5 12c3-6 11-6 14 0-3 6-11 6-14 0z" />
-        <circle cx="16" cy="12" r="1" fill="currentColor" />
-        <path d="M2 10l4.5 2L2 14" />
-      </svg>
-    ),
-  },
-  {
-    key: '/museum',
-    label: 'Museum',
-    icon: (
-      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 21h18" /><path d="M5 21V7l7-4 7 4v14" />
-        <path d="M9 21v-6h6v6" /><path d="M9 10h1" /><path d="M14 10h1" />
-      </svg>
-    ),
-  },
-  {
-    key: '/shipping',
-    label: 'Shipping',
-    icon: (
-      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 16V8a2 2 0 00-1-1.73L13 2.27a2 2 0 00-2 0L4 6.27A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
-        <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
-        <line x1="12" y1="22.08" x2="12" y2="12" />
-      </svg>
-    ),
-  },
-  {
-    key: '/crafting',
-    label: 'Crafting',
-    icon: (
-      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" />
-      </svg>
-    ),
-  },
-  {
-    key: '/island',
-    label: 'Ginger Island',
-    icon: (
-      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M17 20H7c-3 0-5-2-5-5 0-2.5 2-5 5.5-5C8 7 10 4 14 4c3.5 0 6 2.5 6 6 0 .5 0 1-.1 1.5" />
-        <path d="M12 10v6" /><path d="M9 13l3-3 3 3" />
-      </svg>
-    ),
-  },
-  {
-    key: '/misc',
-    label: 'Misc',
-    icon: (
-      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-      </svg>
-    ),
-  },
-  {
-    key: '/spawn-codes',
-    label: 'Spawn Codes',
-    cheat: true,
-    icon: (
-      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" />
-        <line x1="14" y1="4" x2="10" y2="20" />
-      </svg>
-    ),
-  },
+  { key: '/cooking', label: 'Cooking' },
+  { key: '/community-center', label: 'Bundles' },
+  { key: '/fish', label: 'Fish' },
+  { key: '/museum', label: 'Museum' },
+  { key: '/shipping', label: 'Shipping' },
+  { key: '/crafting', label: 'Crafting' },
+  { key: '/island', label: 'Ginger Island' },
+  { key: '/misc', label: 'Misc' },
+  { key: '/spawn-codes', label: 'Spawn Codes', cheat: true },
 ];
 
 export default function Sidebar({ isOpen, onClose }) {
@@ -139,7 +50,7 @@ export default function Sidebar({ isOpen, onClose }) {
 
       <nav className={`sidebar${isOpen ? ' open' : ''}`}>
         {/* Logo */}
-        <div className="sidebar-logo" onClick={() => handleNav('/')}>
+        <div className="sidebar-logo" onClick={() => handleNav('/cooking')}>
           <Junimo color="#66bb6a" size={28} />
           <div className="sidebar-logo-text">
             <span className="sidebar-title">Stardew</span>
@@ -158,13 +69,12 @@ export default function Sidebar({ isOpen, onClose }) {
               className={`sidebar-item${location.pathname === item.key ? ' active' : ''}${item.cheat ? ' sidebar-cheat' : ''}`}
               onClick={() => handleNav(item.key)}
             >
-              <span className="sidebar-item-icon">{item.icon}</span>
               <span className="sidebar-item-label">{item.label}</span>
             </button>
           ))}
         </div>
 
-        {/* Decorative Junimos */}
+        {/* Decorative custom Junimos */}
         <div className="sidebar-junimos">
           <Junimo color="#64b5f6" size={16} />
           <Junimo color="#ffb74d" size={16} />

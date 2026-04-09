@@ -1,6 +1,11 @@
 import { useState, useMemo, useCallback } from 'react';
 import { SPAWN_CODES, SPAWN_CATEGORIES } from '../data/spawnCodes';
-import { ICONS } from '../data/icons';
+import { useProfession } from '../context/ProfessionContext';
+import {
+  createProfessionPricePredicate,
+  getPriceDisplay,
+} from '../utils/professionPricing';
+import PriceWithTooltip from '../components/PriceWithTooltip';
 
 const RARITY_ORDER = ['Legendary', 'Epic', 'Rare', 'Uncommon', 'Common'];
 const RARITY_COLORS = {
@@ -11,14 +16,6 @@ const RARITY_COLORS = {
   Legendary: '#ff9800',
 };
 
-const CATEGORY_ICONS = {
-  'Crop': '🌾', 'Seed': '🌱', 'Forage': '🍄', 'Fish': '🐟',
-  'Mineral': '💎', 'Artifact': '🏺', 'Animal Product': '🥚',
-  'Artisan Good': '🧀', 'Cooking': '🍳', 'Resource': '🪨',
-  'Bait & Tackle': '🎣', 'Bomb': '💣', 'Furniture': '🪑',
-  'Tool': '🧭', 'Ring': '💍', 'Monster Loot': '👹',
-  'Special': '✨', 'Misc': '📦', 'Tree Fruit': '🍎', 'Sapling': '🌳',
-};
 
 const SORT_OPTIONS = [
   { value: 'id', label: 'By ID' },
@@ -27,6 +24,13 @@ const SORT_OPTIONS = [
   { value: 'price', label: 'By Price' },
   { value: 'category', label: 'By Category' },
 ];
+const DEFAULT_SORT_DIRECTIONS = {
+  id: 'asc',
+  alpha: 'asc',
+  rarity: 'asc',
+  price: 'desc',
+  category: 'asc',
+};
 
 const DISCLAIMER_KEY = 'sdv-spawn-codes-acknowledged';
 const FAVORITES_KEY = 'sdv-spawn-favorites';
@@ -134,23 +138,16 @@ function FavButton({ id, favorites, toggleFavorite }) {
   );
 }
 
-// ─── Item Icon ───
-function ItemIcon({ item }) {
-  const iconData = ICONS[String(item.id)];
-  if (iconData) {
-    return <img className="spawn-item-icon" src={iconData} alt={item.name} />;
-  }
-  const emoji = CATEGORY_ICONS[item.category] || '?';
-  return <span className="spawn-cat-icon">{emoji}</span>;
-}
-
 // ─── Main Page ───
 export default function SpawnCodesPage() {
   const [acknowledged, setAcknowledged] = useState(
     () => localStorage.getItem(DISCLAIMER_KEY) === 'true'
   );
   const [search, setSearch] = useState('');
-  const [sort, setSort] = useState('id');
+  const [sortState, setSortState] = useState({
+    column: 'id',
+    direction: DEFAULT_SORT_DIRECTIONS.id,
+  });
   const [activeCategories, setActiveCategories] = useState(new Set());
   const [filter, setFilter] = useState('all'); // 'all' | 'favorites'
   const [favorites, setFavorites] = useState(() => {
@@ -159,6 +156,7 @@ export default function SpawnCodesPage() {
       return stored ? new Set(JSON.parse(stored)) : new Set();
     } catch { return new Set(); }
   });
+  const { selection, priceFilterMode } = useProfession();
 
   const toggleFavorite = useCallback((id) => {
     setFavorites((prev) => {
@@ -169,6 +167,83 @@ export default function SpawnCodesPage() {
       return next;
     });
   }, []);
+
+  const toggleCategory = (cat) => {
+    setActiveCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(cat)) next.delete(cat);
+      else next.add(cat);
+      return next;
+    });
+  };
+
+  const handleSortClick = useCallback((nextSort) => {
+    setSortState((prev) => {
+      if (prev.column === nextSort) {
+        return {
+          ...prev,
+          direction: prev.direction === 'asc' ? 'desc' : 'asc',
+        };
+      }
+      return {
+        column: nextSort,
+        direction: DEFAULT_SORT_DIRECTIONS[nextSort] ?? 'asc',
+      };
+    });
+  }, []);
+
+  const getAriaSort = useCallback((columnSort) => {
+    if (sortState.column !== columnSort) return 'none';
+    return sortState.direction === 'asc' ? 'ascending' : 'descending';
+  }, [sortState]);
+  const sortArrow = useCallback((columnSort) => {
+    if (sortState.column !== columnSort) return ' \u21D5';
+    return sortState.direction === 'asc' ? ' \u2191' : ' \u2193';
+  }, [sortState]);
+
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase().trim();
+    const professionPredicate = createProfessionPricePredicate(
+      priceFilterMode,
+      (item) => getPriceDisplay(item.price, item, selection),
+    );
+    let items = SPAWN_CODES.filter((item) => {
+      if (filter === 'favorites' && !favorites.has(item.id)) return false;
+      if (activeCategories.size > 0 && !activeCategories.has(item.category)) return false;
+      if (q) {
+        const idMatch = String(item.id).includes(q);
+        const nameMatch = item.name.toLowerCase().includes(q);
+        if (!idMatch && !nameMatch) return false;
+      }
+      if (professionPredicate && !professionPredicate(item)) return false;
+      return true;
+    });
+
+    switch (sortState.column) {
+      case 'alpha':
+        items.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case 'rarity':
+        items.sort((a, b) => RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity));
+        break;
+      case 'price':
+        items.sort((a, b) => {
+          const pa = getPriceDisplay(a.price, a, selection);
+          const pb = getPriceDisplay(b.price, b, selection);
+          return pa.adjustedPrice - pb.adjustedPrice;
+        });
+        break;
+      case 'category':
+        items.sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name));
+        break;
+      default: // id
+        items.sort((a, b) => a.id - b.id);
+    }
+    if (sortState.direction === 'desc') {
+      items.reverse();
+    }
+    return items;
+  }, [search, sortState, activeCategories, filter, favorites, selection, priceFilterMode]);
 
   if (!acknowledged) {
     return (
@@ -182,51 +257,10 @@ export default function SpawnCodesPage() {
     );
   }
 
-  const toggleCategory = (cat) => {
-    setActiveCategories((prev) => {
-      const next = new Set(prev);
-      if (next.has(cat)) next.delete(cat);
-      else next.add(cat);
-      return next;
-    });
-  };
-
-  const filtered = useMemo(() => {
-    const q = search.toLowerCase().trim();
-    let items = SPAWN_CODES.filter((item) => {
-      if (filter === 'favorites' && !favorites.has(item.id)) return false;
-      if (activeCategories.size > 0 && !activeCategories.has(item.category)) return false;
-      if (q) {
-        const idMatch = String(item.id).includes(q);
-        const nameMatch = item.name.toLowerCase().includes(q);
-        if (!idMatch && !nameMatch) return false;
-      }
-      return true;
-    });
-
-    switch (sort) {
-      case 'alpha':
-        items.sort((a, b) => a.name.localeCompare(b.name));
-        break;
-      case 'rarity':
-        items.sort((a, b) => RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity));
-        break;
-      case 'price':
-        items.sort((a, b) => b.price - a.price);
-        break;
-      case 'category':
-        items.sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name));
-        break;
-      default: // id
-        items.sort((a, b) => a.id - b.id);
-    }
-    return items;
-  }, [search, sort, activeCategories, filter, favorites]);
-
   return (
     <div className="container">
       <header className="header">
-        <h1><span className="header-icon">{'</>'}</span>Spawn Codes</h1>
+        <h1>Spawn Codes</h1>
         <p className="subtitle">{SPAWN_CODES.length} items — searchable reference</p>
       </header>
 
@@ -256,7 +290,6 @@ export default function SpawnCodesPage() {
             className={`spawn-cat-pill${activeCategories.has(cat) ? ' active' : ''}`}
             onClick={() => toggleCategory(cat)}
           >
-            <span className="spawn-pill-icon">{CATEGORY_ICONS[cat] || ''}</span>
             {cat}
           </button>
         ))}
@@ -281,7 +314,16 @@ export default function SpawnCodesPage() {
           )}
         </div>
         <div className="sort-wrap">
-          <select value={sort} onChange={(e) => setSort(e.target.value)}>
+          <select
+            value={sortState.column}
+            onChange={(e) => {
+              const nextSort = e.target.value;
+              setSortState({
+                column: nextSort,
+                direction: DEFAULT_SORT_DIRECTIONS[nextSort] ?? 'asc',
+              });
+            }}
+          >
             {SORT_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>{o.label}</option>
             ))}
@@ -295,12 +337,31 @@ export default function SpawnCodesPage() {
           <thead>
             <tr>
               <th className="spawn-th-fav"></th>
-              <th className="spawn-th-icon"></th>
-              <th className="spawn-th-id">ID</th>
-              <th className="spawn-th-name">Item</th>
-              <th className="spawn-th-cat">Category</th>
-              <th className="spawn-th-rarity">Rarity</th>
-              <th className="spawn-th-price">Price</th>
+              <th className="spawn-th-id" aria-sort={getAriaSort('id')}>
+                <button type="button" className="spawn-sort-th-btn" onClick={() => handleSortClick('id')}>
+                  ID{sortArrow('id')}
+                </button>
+              </th>
+              <th className="spawn-th-name" aria-sort={getAriaSort('alpha')}>
+                <button type="button" className="spawn-sort-th-btn" onClick={() => handleSortClick('alpha')}>
+                  Item{sortArrow('alpha')}
+                </button>
+              </th>
+              <th className="spawn-th-cat" aria-sort={getAriaSort('category')}>
+                <button type="button" className="spawn-sort-th-btn" onClick={() => handleSortClick('category')}>
+                  Category{sortArrow('category')}
+                </button>
+              </th>
+              <th className="spawn-th-rarity" aria-sort={getAriaSort('rarity')}>
+                <button type="button" className="spawn-sort-th-btn" onClick={() => handleSortClick('rarity')}>
+                  Rarity{sortArrow('rarity')}
+                </button>
+              </th>
+              <th className="spawn-th-price" aria-sort={getAriaSort('price')}>
+                <button type="button" className="spawn-sort-th-btn" onClick={() => handleSortClick('price')}>
+                  Price{sortArrow('price')}
+                </button>
+              </th>
               <th className="spawn-th-copy"></th>
             </tr>
           </thead>
@@ -308,7 +369,6 @@ export default function SpawnCodesPage() {
             {filtered.map((item) => (
               <tr key={item.id} className={`spawn-row${favorites.has(item.id) ? ' spawn-row-fav' : ''}`}>
                 <td><FavButton id={item.id} favorites={favorites} toggleFavorite={toggleFavorite} /></td>
-                <td className="spawn-icon-cell"><ItemIcon item={item} /></td>
                 <td className="spawn-id">
                   <code>[{item.id}]</code>
                 </td>
@@ -322,7 +382,14 @@ export default function SpawnCodesPage() {
                     {item.rarity}
                   </span>
                 </td>
-                <td className="spawn-price">{item.price > 0 ? `${item.price}g` : '—'}</td>
+                <td className="spawn-price">
+                  <PriceWithTooltip
+                    value={item.price}
+                    item={item}
+                    selection={selection}
+                    className="spawn-price"
+                  />
+                </td>
                 <td><CopyButton id={item.id} /></td>
               </tr>
             ))}

@@ -101,11 +101,11 @@ export function CollectionControls({ page, sortOptions, done = null, total = nul
 }
 
 // Progress header
-export function CollectionHeader({ title, done, total, colorClass, icon }) {
+export function CollectionHeader({ title, done, total, colorClass }) {
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
   return (
     <header className="header">
-      <h1>{icon && <span className="header-icon">{icon}</span>}{title}</h1>
+      <h1>{title}</h1>
       <p className="subtitle">{done} of {total} collected</p>
       <div className="progress-wrap">
         <div className={`progress-bar ${colorClass || ''}`} style={{ width: `${pct}%` }} />
@@ -135,7 +135,8 @@ export function CollectionItem({ checked, onClick, name, meta, detail, extra }) 
 }
 
 // Hook to get filtered items
-export function useFilteredItems(items, page, storeKey, getItemId, getSearchText) {
+export function useFilteredItems(items, page, storeKey, getItemId, getSearchText, options = {}) {
+  const { extraPredicate = null } = options;
   const searchQueries = useCollectionStore((s) => s.searchQueries);
   const filters = useCollectionStore((s) => s.filters);
   const checked = useCollectionStore((s) => s[storeKey]);
@@ -151,8 +152,9 @@ export function useFilteredItems(items, page, storeKey, getItemId, getSearchText
       if (filter === 'completed' && !isChecked) return false;
       if (filter === 'remaining' && isChecked) return false;
       if (query && !getSearchText(item).toLowerCase().includes(query)) return false;
+      if (extraPredicate && !extraPredicate(item)) return false;
 
       return true;
     });
-  }, [items, query, filter, checked]);
+  }, [items, query, filter, checked, extraPredicate]);
 }

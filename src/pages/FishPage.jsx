@@ -2,9 +2,15 @@ import { useMemo } from 'react';
 import { useCollectionStore } from '../hooks/useCollectionStore';
 import { useCollectionSync } from '../hooks/useCollectionSync';
 import { FISH, FISH_CATEGORIES } from '../data/fish';
+import { useProfession } from '../context/ProfessionContext';
+import {
+  createProfessionPricePredicate,
+  getPriceDisplay,
+} from '../utils/professionPricing';
+import PriceWithTooltip from '../components/PriceWithTooltip';
 import {
   CollectionHeader, CollectionControls, SectionHeader,
-  CollectionItem, useFilteredItems,
+  Checkmark, useFilteredItems,
 } from '../components/CollectionPage';
 
 const SORT_OPTIONS = [
@@ -41,6 +47,14 @@ export default function FishPage() {
   const toggleItem = useCollectionStore((s) => s.toggleItem);
   const sortModes = useCollectionStore((s) => s.sortModes);
   const sort = sortModes['fish'] || 'category';
+  const { selection, priceFilterMode } = useProfession();
+  const professionPredicate = useMemo(
+    () => createProfessionPricePredicate(
+      priceFilterMode,
+      (item) => getPriceDisplay(item.price, { ...item, priceTags: ['fish'] }, selection),
+    ),
+    [priceFilterMode, selection],
+  );
 
   const done = Object.keys(fishChecked).length;
   const total = FISH.length;
@@ -49,6 +63,7 @@ export default function FishPage() {
     FISH, 'fish', 'fishChecked',
     (f) => f.name,
     (f) => `${f.name} ${f.location} ${f.category} ${f.season?.join(' ') || ''}`,
+    { extraPredicate: professionPredicate },
   );
 
   const grouped = useMemo(() => {
@@ -83,7 +98,7 @@ export default function FishPage() {
 
   return (
     <div className="container">
-      <CollectionHeader title="Fish Collection" done={done} total={total} colorClass="fish-progress" icon="🐟" />
+      <CollectionHeader title="Fish Collection" done={done} total={total} colorClass="fish-progress" />
       <CollectionControls page="fish" sortOptions={SORT_OPTIONS} done={done} total={total} />
       <div className="panel">
         {grouped.map(([group, items]) => {
@@ -97,7 +112,13 @@ export default function FishPage() {
                 total={items.length}
                 defaultOpen={true}
               />
-              <SectionItems items={items} fishChecked={fishChecked} toggleItem={toggleItem} sectionKey={`fish:${group}`} />
+              <SectionItems
+                items={items}
+                fishChecked={fishChecked}
+                toggleItem={toggleItem}
+                sectionKey={`fish:${group}`}
+                professionSelection={selection}
+              />
             </div>
           );
         })}
@@ -107,31 +128,54 @@ export default function FishPage() {
   );
 }
 
-function SectionItems({ items, fishChecked, toggleItem, sectionKey }) {
+function SectionItems({ items, fishChecked, toggleItem, sectionKey, professionSelection }) {
   const collapsed = useCollectionStore((s) => s.collapsedSections);
   if (collapsed[sectionKey]) return null;
 
-  return items.map((fish) => (
-    <CollectionItem
-      key={fish.name}
-      checked={!!fishChecked[fish.name]}
-      onClick={() => toggleItem('fishChecked', fish.name)}
-      name={fish.name}
-      extra={<DifficultyBadge difficulty={fish.difficulty} />}
-      meta={
-        <>
-          <span className="cc-item-source">{fish.location}</span>
-          <SeasonTags seasons={fish.season} />
-          {fish.weather !== 'Any' && (
-            <span className="fish-weather">{fish.weather}</span>
-          )}
-          {fish.time !== 'Any' && (
-            <span className="cc-item-source">{fish.time}</span>
-          )}
-          <span className="fish-price">{fish.price}g</span>
-        </>
-      }
-      detail={fish.note}
-    />
-  ));
+  return (
+    <table className="fish-grid-tbl">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Name</th>
+          <th>Source</th>
+          <th>Season</th>
+          <th>Time</th>
+          <th>Weather</th>
+          <th>Difficulty</th>
+          <th>Sell</th>
+        </tr>
+      </thead>
+      <tbody>
+        {items.map((fish) => (
+          <tr
+            key={fish.name}
+            className={fishChecked[fish.name] ? 'chk' : ''}
+            onClick={() => toggleItem('fishChecked', fish.name)}
+            style={{ cursor: 'pointer' }}
+          >
+            <td>
+              <div className={`fish-grid-check${fishChecked[fish.name] ? ' checked' : ''}`}>
+                <Checkmark />
+              </div>
+            </td>
+            <td className="fish-grid-name">{fish.name}</td>
+            <td>{fish.location}</td>
+            <td><SeasonTags seasons={fish.season} /></td>
+            <td>{fish.time}</td>
+            <td>{fish.weather !== 'Any' ? <span className="fish-weather">{fish.weather}</span> : 'Any'}</td>
+            <td><DifficultyBadge difficulty={fish.difficulty} /></td>
+            <td>
+              <PriceWithTooltip
+                value={fish.price}
+                item={{ ...fish, priceTags: ['fish'] }}
+                selection={professionSelection}
+                className="fish-price"
+              />
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
 }

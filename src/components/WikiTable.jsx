@@ -2,15 +2,10 @@ import { useMemo } from 'react';
 import { useRecipeStore } from '../hooks/useRecipeStore';
 import { useCollectionStore } from '../hooks/useCollectionStore';
 import { SEASON_ORDER, TYPE_ORDER, SOURCE_ORDER, SOURCE_LABELS } from '../data/recipes';
-import { ICONS } from '../data/icons';
 import { useIsMobile } from '../hooks/useMediaQuery';
-
-function getIcon(id) { return ICONS[String(id)] || ''; }
-
-function parseSellPrice(s) {
-  const m = s.match(/(\d+)/);
-  return m ? parseInt(m[1]) : 0;
-}
+import { useProfession } from '../context/ProfessionContext';
+import { getPriceDisplay } from '../utils/professionPricing';
+import PriceWithTooltip from './PriceWithTooltip';
 
 export default function WikiTable() {
   const recipes = useRecipeStore((s) => s.recipes);
@@ -21,6 +16,7 @@ export default function WikiTable() {
   const wikiSort = useRecipeStore((s) => s.wikiSort);
   const setWikiSort = useRecipeStore((s) => s.setWikiSort);
   const isMobile = useIsMobile();
+  const { selection } = useProfession();
 
   const sorted = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
@@ -42,17 +38,19 @@ export default function WikiTable() {
 
     copy.sort((a, b) => {
       const ra = recipes[a], rb = recipes[b];
+      const pa = getPriceDisplay(ra[10], { name: ra[0], category: 'Cooking' }, selection);
+      const pb = getPriceDisplay(rb[10], { name: rb[0], category: 'Cooking' }, selection);
       switch (column) {
         case 'name': return dir * ra[0].localeCompare(rb[0]);
         case 'energy': return dir * (ra[6] - rb[6]);
         case 'health': return dir * (ra[7] - rb[7]);
-        case 'sell': return dir * (parseSellPrice(ra[10]) - parseSellPrice(rb[10]));
+        case 'sell': return dir * (pa.adjustedPrice - pb.adjustedPrice);
         case 'source': return dir * ((SOURCE_ORDER[ra[4]] ?? 12) - (SOURCE_ORDER[rb[4]] ?? 12));
         default: return ra[0].localeCompare(rb[0]);
       }
     });
     return copy;
-  }, [recipes, checked, currentFilter, searchQuery, wikiSort]);
+  }, [recipes, checked, currentFilter, searchQuery, wikiSort, selection]);
 
   const sortArrow = (col) => {
     if (wikiSort.column !== col) return ' \u21D5';
@@ -84,12 +82,11 @@ export default function WikiTable() {
         </div>
         {sorted.map((i) => {
           const r = recipes[i];
-          const ic = getIcon(r[5]);
+          const priceMeta = getPriceDisplay(r[10], { name: r[0], category: 'Cooking' }, selection);
           return (
             <div key={i} className={`wiki-card${checked[i] ? ' chk' : ''}`} onClick={() => toggle(i)}>
               <div className="wiki-card-row">
                 <div className="wiki-card-left">
-                  {ic && <img className="wicon" src={ic} alt="" />}
                   <div className="wiki-card-info">
                     <span className="wname">{r[0]}</span>
                     <span className="wiki-card-src">{r[11] || SOURCE_LABELS[r[4]] || r[4]}</span>
@@ -98,7 +95,12 @@ export default function WikiTable() {
                 <div className="wiki-card-stats">
                   <span className="wiki-stat wiki-stat-energy">{r[6]}E</span>
                   <span className="wiki-stat wiki-stat-health">{r[7]}HP</span>
-                  <span className="wiki-stat wiki-stat-sell">{r[10]}</span>
+                  <PriceWithTooltip
+                    value={r[10]}
+                    item={{ name: r[0], category: 'Cooking' }}
+                    selection={selection}
+                    className="wiki-stat wiki-stat-sell"
+                  />
                 </div>
               </div>
               <div className="wiki-card-ings">{r[1].join(', ')}</div>
@@ -114,31 +116,36 @@ export default function WikiTable() {
     <table className="wiki-tbl">
       <thead>
         <tr>
-          <th></th>
           <th className="wiki-th-sort" onClick={() => setWikiSort('name')}>Name{sortArrow('name')}</th>
+          <th className="wsrc wiki-th-sort" onClick={() => setWikiSort('source')}>Source{sortArrow('source')}</th>
           <th className="wings">Ingredients</th>
           <th className="wiki-th-sort" onClick={() => setWikiSort('energy')}>Energy{sortArrow('energy')}</th>
           <th className="wiki-th-sort" onClick={() => setWikiSort('health')}>HP{sortArrow('health')}</th>
           <th>Buffs</th>
           <th className="wiki-th-sort" onClick={() => setWikiSort('sell')}>Sell{sortArrow('sell')}</th>
-          <th className="wsrc wiki-th-sort" onClick={() => setWikiSort('source')}>Source{sortArrow('source')}</th>
         </tr>
       </thead>
       <tbody>
         {sorted.map((i) => {
           const r = recipes[i];
-          const ic = getIcon(r[5]);
+          const priceMeta = getPriceDisplay(r[10], { name: r[0], category: 'Cooking' }, selection);
           const buffDisplay = r[8] ? (r[9] ? `${r[8]} (${r[9]})` : r[8]) : '\u2014';
           return (
             <tr key={i} className={checked[i] ? 'chk' : ''} onClick={() => toggle(i)} style={{ cursor: 'pointer' }}>
-              <td>{ic && <img className="wicon" src={ic} alt="" />}</td>
               <td className="wname">{r[0]}</td>
+              <td className="wsrc">{r[11] || SOURCE_LABELS[r[4]] || r[4]}</td>
               <td className="wings">{r[1].join(', ')}</td>
               <td className="wenergy">{r[6]}</td>
               <td className="whealth">{r[7]}</td>
               <td className="wbuff">{buffDisplay}</td>
-              <td className="wsell">{r[10]}</td>
-              <td className="wsrc">{r[11] || SOURCE_LABELS[r[4]] || r[4]}</td>
+              <td className="wsell">
+                <PriceWithTooltip
+                  value={r[10]}
+                  item={{ name: r[0], category: 'Cooking' }}
+                  selection={selection}
+                  className="wsell"
+                />
+              </td>
             </tr>
           );
         })}

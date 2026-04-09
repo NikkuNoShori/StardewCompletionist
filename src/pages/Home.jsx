@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useRecipeStore } from '../hooks/useRecipeStore';
 import { useSupabaseSync } from '../hooks/useSupabaseSync';
 import Header from '../components/Header';
@@ -12,6 +13,11 @@ import ActionButtons from '../components/ActionButtons';
 export default function Home() {
   useSupabaseSync();
   const currentTab = useRecipeStore((s) => s.currentTab);
+  const setFilter = useRecipeStore((s) => s.setFilter);
+
+  useEffect(() => {
+    setFilter('all');
+  }, [setFilter]);
 
   return (
     <>
