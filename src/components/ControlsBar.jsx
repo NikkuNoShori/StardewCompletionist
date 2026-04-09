@@ -1,13 +1,16 @@
 import { useRecipeStore } from '../hooks/useRecipeStore';
 
-export default function ControlsBar() {
+export default function ControlsBar({ inline = false }) {
+  const currentTab = useRecipeStore((s) => s.currentTab);
   const searchQuery = useRecipeStore((s) => s.searchQuery);
   const setSearch = useRecipeStore((s) => s.setSearch);
   const sortMode = useRecipeStore((s) => s.sortMode);
   const setSort = useRecipeStore((s) => s.setSort);
+  const viewMode = useRecipeStore((s) => s.viewMode);
+  const setViewMode = useRecipeStore((s) => s.setViewMode);
 
-  return (
-    <div className="controls-bar">
+  const controls = (
+    <>
       <div className="search-wrap">
         <input
           type="text"
@@ -23,12 +26,33 @@ export default function ControlsBar() {
       </div>
       <div className="sort-wrap">
         <select value={sortMode} onChange={(e) => setSort(e.target.value)}>
-          <option value="alpha">A–Z</option>
+          <option value="alpha">A-Z</option>
           <option value="harvest">Ingredient Season</option>
           <option value="type">Item Type</option>
           <option value="source">Recipe Source</option>
+          <option value="energy">Energy</option>
+          <option value="health">HP</option>
+          <option value="sell">Sell Price</option>
         </select>
       </div>
+      {currentTab === 'recipes' && (
+        <div className="view-wrap">
+          <button className={`view-btn${viewMode === 'table' ? ' active' : ''}`} onClick={() => setViewMode('table')}>
+            Table
+          </button>
+          <button className={`view-btn${viewMode === 'list' ? ' active' : ''}`} onClick={() => setViewMode('list')}>
+            List
+          </button>
+        </div>
+      )}
+    </>
+  );
+
+  if (inline) return controls;
+
+  return (
+    <div className="controls-bar">
+      {controls}
     </div>
   );
 }

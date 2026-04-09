@@ -14,6 +14,7 @@ export const useRecipeStore = create(
       currentFilter: 'all',
       searchQuery: '',
       sortMode: 'alpha',
+      viewMode: 'table',
       ingredientSort: { column: 'name', direction: 'asc' },
       wikiSort: { column: 'name', direction: 'asc' },
       collapsedGroups: {},
@@ -32,6 +33,7 @@ export const useRecipeStore = create(
       setFilter: (filter) => set({ currentFilter: filter }),
       setSearch: (query) => set({ searchQuery: query }),
       setSort: (mode) => set({ sortMode: mode }),
+      setViewMode: (mode) => set({ viewMode: mode }),
       setIngredientSort: (column) => set((state) => {
         const prev = state.ingredientSort;
         if (prev.column === column) {
@@ -50,6 +52,14 @@ export const useRecipeStore = create(
         const key = `${state.sortMode}:${groupKey}`;
         const current = state.collapsedGroups[key] ?? isMobile;
         return { collapsedGroups: { ...state.collapsedGroups, [key]: !current } };
+      }),
+      setAllGroupsCollapsed: (groupKeys, collapsed) => set((state) => {
+        const next = { ...state.collapsedGroups };
+        groupKeys.forEach((groupKey) => {
+          const key = `${state.sortMode}:${groupKey}`;
+          next[key] = collapsed;
+        });
+        return { collapsedGroups: next };
       }),
 
       resetAll: () => {
@@ -73,6 +83,7 @@ export const useRecipeStore = create(
         currentTab: 'recipes',
         currentFilter: 'all',
         sortMode: 'alpha',
+        viewMode: 'table',
         ingredientSort: { column: 'name', direction: 'asc' },
         wikiSort: { column: 'name', direction: 'asc' },
         collapsedGroups: {},
@@ -81,6 +92,7 @@ export const useRecipeStore = create(
         currentTab: state.currentTab,
         currentFilter: state.currentFilter,
         sortMode: state.sortMode,
+        viewMode: state.viewMode,
         ingredientSort: state.ingredientSort,
         wikiSort: state.wikiSort,
         collapsedGroups: state.collapsedGroups,

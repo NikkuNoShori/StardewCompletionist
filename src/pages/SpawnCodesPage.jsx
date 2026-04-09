@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { SPAWN_CODES, SPAWN_CATEGORIES } from '../data/spawnCodes';
 import { useProfession } from '../context/ProfessionContext';
+import { useCollectionStore } from '../hooks/useCollectionStore';
 import {
   createProfessionPricePredicate,
   getPriceDisplay,
@@ -157,6 +158,9 @@ export default function SpawnCodesPage() {
     } catch { return new Set(); }
   });
   const { selection, priceFilterMode } = useProfession();
+  const viewModes = useCollectionStore((s) => s.viewModes);
+  const setViewMode = useCollectionStore((s) => s.setViewMode);
+  const viewMode = viewModes['spawn-codes'] || 'table';
 
   const toggleFavorite = useCallback((id) => {
     setFavorites((prev) => {
@@ -266,42 +270,38 @@ export default function SpawnCodesPage() {
 
       <HowToUse />
 
-      {/* All / Favorites filter bar */}
-      <div className="filter-bar collection-controls-top">
-        <button
-          className={`filter-btn${filter === 'all' ? ' active' : ''}`}
-          onClick={() => setFilter('all')}
-        >
-          All ({SPAWN_CODES.length})
-        </button>
-        <button
-          className={`filter-btn${filter === 'favorites' ? ' active' : ''}`}
-          onClick={() => setFilter('favorites')}
-        >
-          Favorites ({favorites.size})
-        </button>
-      </div>
-
-      {/* Category filter pills */}
-      <div className="spawn-cat-filters">
-        {SPAWN_CATEGORIES.map((cat) => (
+      {/* Unified controls row */}
+      <div className="controls-bar spawn-controls-one-line">
+        <div className="filter-bar collection-filter-inline spawn-filter-inline">
           <button
-            key={cat}
-            className={`spawn-cat-pill${activeCategories.has(cat) ? ' active' : ''}`}
-            onClick={() => toggleCategory(cat)}
+            className={`filter-btn${filter === 'all' ? ' active' : ''}`}
+            onClick={() => setFilter('all')}
           >
-            {cat}
+            All ({SPAWN_CODES.length})
           </button>
-        ))}
-        {activeCategories.size > 0 && (
-          <button className="spawn-cat-pill spawn-cat-clear" onClick={() => setActiveCategories(new Set())}>
-            Clear
+          <button
+            className={`filter-btn${filter === 'favorites' ? ' active' : ''}`}
+            onClick={() => setFilter('favorites')}
+          >
+            Favorites ({favorites.size})
           </button>
-        )}
-      </div>
-
-      {/* Search + Sort */}
-      <div className="controls-bar">
+        </div>
+        <div className="spawn-cat-filters spawn-cat-filters-inline">
+          {SPAWN_CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              className={`spawn-cat-pill${activeCategories.has(cat) ? ' active' : ''}`}
+              onClick={() => toggleCategory(cat)}
+            >
+              {cat}
+            </button>
+          ))}
+          {activeCategories.size > 0 && (
+            <button className="spawn-cat-pill spawn-cat-clear" onClick={() => setActiveCategories(new Set())}>
+              Clear
+            </button>
+          )}
+        </div>
         <div className="search-wrap">
           <input
             type="text"
@@ -329,72 +329,120 @@ export default function SpawnCodesPage() {
             ))}
           </select>
         </div>
+        <div className="view-wrap">
+          <button
+            className={`view-btn${viewMode === 'table' ? ' active' : ''}`}
+            onClick={() => setViewMode('spawn-codes', 'table')}
+          >
+            Table
+          </button>
+          <button
+            className={`view-btn${viewMode === 'list' ? ' active' : ''}`}
+            onClick={() => setViewMode('spawn-codes', 'list')}
+          >
+            List
+          </button>
+        </div>
       </div>
 
       {/* Table */}
       <div className="panel spawn-panel">
-        <table className="spawn-table">
-          <thead>
-            <tr>
-              <th className="spawn-th-fav"></th>
-              <th className="spawn-th-id" aria-sort={getAriaSort('id')}>
-                <button type="button" className="spawn-sort-th-btn" onClick={() => handleSortClick('id')}>
-                  ID{sortArrow('id')}
-                </button>
-              </th>
-              <th className="spawn-th-name" aria-sort={getAriaSort('alpha')}>
-                <button type="button" className="spawn-sort-th-btn" onClick={() => handleSortClick('alpha')}>
-                  Item{sortArrow('alpha')}
-                </button>
-              </th>
-              <th className="spawn-th-cat" aria-sort={getAriaSort('category')}>
-                <button type="button" className="spawn-sort-th-btn" onClick={() => handleSortClick('category')}>
-                  Category{sortArrow('category')}
-                </button>
-              </th>
-              <th className="spawn-th-rarity" aria-sort={getAriaSort('rarity')}>
-                <button type="button" className="spawn-sort-th-btn" onClick={() => handleSortClick('rarity')}>
-                  Rarity{sortArrow('rarity')}
-                </button>
-              </th>
-              <th className="spawn-th-price" aria-sort={getAriaSort('price')}>
-                <button type="button" className="spawn-sort-th-btn" onClick={() => handleSortClick('price')}>
-                  Price{sortArrow('price')}
-                </button>
-              </th>
-              <th className="spawn-th-copy"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((item) => (
-              <tr key={item.id} className={`spawn-row${favorites.has(item.id) ? ' spawn-row-fav' : ''}`}>
-                <td><FavButton id={item.id} favorites={favorites} toggleFavorite={toggleFavorite} /></td>
-                <td className="spawn-id">
-                  <code>[{item.id}]</code>
-                </td>
-                <td className="spawn-name">{item.name}</td>
-                <td className="spawn-cat">{item.category}</td>
-                <td>
-                  <span
-                    className={`spawn-rarity spawn-rarity-${item.rarity.toLowerCase()}`}
-                    style={{ color: RARITY_COLORS[item.rarity] }}
-                  >
-                    {item.rarity}
-                  </span>
-                </td>
-                <td className="spawn-price">
-                  <PriceWithTooltip
-                    value={item.price}
-                    item={item}
-                    selection={selection}
-                    className="spawn-price"
-                  />
-                </td>
-                <td><CopyButton id={item.id} /></td>
+        {viewMode === 'table' ? (
+          <table className="spawn-table">
+            <thead>
+              <tr>
+                <th className="spawn-th-fav"></th>
+                <th className="spawn-th-id" aria-sort={getAriaSort('id')}>
+                  <button type="button" className="spawn-sort-th-btn" onClick={() => handleSortClick('id')}>
+                    ID{sortArrow('id')}
+                  </button>
+                </th>
+                <th className="spawn-th-name" aria-sort={getAriaSort('alpha')}>
+                  <button type="button" className="spawn-sort-th-btn" onClick={() => handleSortClick('alpha')}>
+                    Item{sortArrow('alpha')}
+                  </button>
+                </th>
+                <th className="spawn-th-cat" aria-sort={getAriaSort('category')}>
+                  <button type="button" className="spawn-sort-th-btn" onClick={() => handleSortClick('category')}>
+                    Category{sortArrow('category')}
+                  </button>
+                </th>
+                <th className="spawn-th-rarity" aria-sort={getAriaSort('rarity')}>
+                  <button type="button" className="spawn-sort-th-btn" onClick={() => handleSortClick('rarity')}>
+                    Rarity{sortArrow('rarity')}
+                  </button>
+                </th>
+                <th className="spawn-th-price" aria-sort={getAriaSort('price')}>
+                  <button type="button" className="spawn-sort-th-btn" onClick={() => handleSortClick('price')}>
+                    Price{sortArrow('price')}
+                  </button>
+                </th>
+                <th className="spawn-th-copy"></th>
               </tr>
+            </thead>
+            <tbody>
+              {filtered.map((item) => (
+                <tr key={item.id} className={`spawn-row${favorites.has(item.id) ? ' spawn-row-fav' : ''}`}>
+                  <td><FavButton id={item.id} favorites={favorites} toggleFavorite={toggleFavorite} /></td>
+                  <td className="spawn-id">
+                    <code>[{item.id}]</code>
+                  </td>
+                  <td className="spawn-name">{item.name}</td>
+                  <td className="spawn-cat">{item.category}</td>
+                  <td>
+                    <span
+                      className={`spawn-rarity spawn-rarity-${item.rarity.toLowerCase()}`}
+                      style={{ color: RARITY_COLORS[item.rarity] }}
+                    >
+                      {item.rarity}
+                    </span>
+                  </td>
+                  <td className="spawn-price">
+                    <PriceWithTooltip
+                      value={item.price}
+                      item={item}
+                      selection={selection}
+                      className="spawn-price"
+                    />
+                  </td>
+                  <td><CopyButton id={item.id} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <div>
+            {filtered.map((item) => (
+              <div key={item.id} className={`cc-item${favorites.has(item.id) ? ' spawn-row-fav' : ''}`}>
+                <div className="cc-item-info">
+                  <div className="cc-item-top">
+                    <span className="cc-item-name">{item.name}</span>
+                    <span
+                      className={`spawn-rarity spawn-rarity-${item.rarity.toLowerCase()}`}
+                      style={{ color: RARITY_COLORS[item.rarity] }}
+                    >
+                      {item.rarity}
+                    </span>
+                  </div>
+                  <div className="cc-item-meta">
+                    <span className="spawn-id"><code>[{item.id}]</code></span>
+                    <span className="spawn-cat">{item.category}</span>
+                    <PriceWithTooltip
+                      value={item.price}
+                      item={item}
+                      selection={selection}
+                      className="spawn-price"
+                    />
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                  <FavButton id={item.id} favorites={favorites} toggleFavorite={toggleFavorite} />
+                  <CopyButton id={item.id} />
+                </div>
+              </div>
             ))}
-          </tbody>
-        </table>
+          </div>
+        )}
         {filtered.length === 0 && <div className="empty">{filter === 'favorites' ? 'No favorites yet — star some items!' : 'No items match your search'}</div>}
         <div className="spawn-count">{filtered.length} items shown</div>
       </div>

@@ -3,6 +3,9 @@ import { useRecipeStore } from '../hooks/useRecipeStore';
 import { useCollectionStore } from '../hooks/useCollectionStore';
 import { SEASON_ORDER, TYPE_ORDER, SOURCE_ORDER, SOURCE_LABELS, seasonLabel } from '../data/recipes';
 import { useIsMobile } from '../hooks/useMediaQuery';
+import { useProfession } from '../context/ProfessionContext';
+import { getPriceDisplay } from '../utils/professionPricing';
+import PriceWithTooltip from './PriceWithTooltip';
 
 function dotClass(key, mode) {
   if (mode === 'harvest') {
@@ -21,11 +24,14 @@ export default function RecipeList() {
   const currentFilter = useRecipeStore((s) => s.currentFilter);
   const searchQuery = useRecipeStore((s) => s.searchQuery);
   const sortMode = useRecipeStore((s) => s.sortMode);
+  const viewMode = useRecipeStore((s) => s.viewMode);
   const toggle = useRecipeStore((s) => s.toggle);
   const toggleIngredient = useRecipeStore((s) => s.toggleIngredient);
   const collapsedGroups = useRecipeStore((s) => s.collapsedGroups);
   const toggleGroup = useRecipeStore((s) => s.toggleGroup);
+  const setAllGroupsCollapsed = useRecipeStore((s) => s.setAllGroupsCollapsed);
   const isMobile = useIsMobile();
+  const { selection } = useProfession();
 
   const filtered = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
@@ -50,12 +56,19 @@ export default function RecipeList() {
       case 'harvest': copy.sort((a, b) => (SEASON_ORDER[recipes[a][2]] ?? 5) - (SEASON_ORDER[recipes[b][2]] ?? 5) || cmp(a, b)); break;
       case 'type': copy.sort((a, b) => (TYPE_ORDER[recipes[a][3]] ?? 9) - (TYPE_ORDER[recipes[b][3]] ?? 9) || cmp(a, b)); break;
       case 'source': copy.sort((a, b) => (SOURCE_ORDER[recipes[a][4]] ?? 12) - (SOURCE_ORDER[recipes[b][4]] ?? 12) || cmp(a, b)); break;
+      case 'energy': copy.sort((a, b) => recipes[b][6] - recipes[a][6] || cmp(a, b)); break;
+      case 'health': copy.sort((a, b) => recipes[b][7] - recipes[a][7] || cmp(a, b)); break;
+      case 'sell': copy.sort((a, b) => {
+        const pa = getPriceDisplay(recipes[a][10], { name: recipes[a][0], category: 'Cooking' }, selection);
+        const pb = getPriceDisplay(recipes[b][10], { name: recipes[b][0], category: 'Cooking' }, selection);
+        return pb.adjustedPrice - pa.adjustedPrice || cmp(a, b);
+      }); break;
     }
     return copy;
-  }, [filtered, sortMode, recipes]);
+  }, [filtered, sortMode, recipes, selection]);
 
   const groups = useMemo(() => {
-    if (sortMode === 'alpha') return null;
+    if (sortMode === 'alpha' || sortMode === 'energy' || sortMode === 'health' || sortMode === 'sell') return null;
 
     const groupMap = new Map();
     sorted.forEach((i) => {
@@ -68,6 +81,9 @@ export default function RecipeList() {
     });
     return groupMap;
   }, [sorted, sortMode, recipes]);
+
+  const groupEntries = groups ? Array.from(groups.entries()) : [];
+  const groupKeys = groupEntries.map(([gk]) => gk);
 
   if (sorted.length === 0) {
     return <div className="empty">No recipes found</div>;
@@ -87,10 +103,9 @@ export default function RecipeList() {
             </svg>
           </div>
         </td>
-        <td className="recipe-grid-name">{r[0]}</td>
-        <td className="recipe-grid-source">{r[11] || SOURCE_LABELS[r[4]] || r[4]}</td>
-        <td>{seasonLabel(r[2])}</td>
-        <td className="recipe-grid-ings">
+        <td className="wname">{r[0]}</td>
+        <td className="wsrc">{r[11] || SOURCE_LABELS[r[4]] || r[4]}</td>
+        <td className="recipe-grid-ings wings">
           {r[1].map((ing, j) => {
             const ingKey = `${i}:${ing}`;
             const ingChecked = !!ingredientsChecked[ingKey];
@@ -109,23 +124,31 @@ export default function RecipeList() {
             );
           })}
         </td>
-        <td>{r[3]}</td>
-        <td>{buffText}</td>
-        <td className="wsell">{r[10]}</td>
+        <td className="wenergy">{r[6]}</td>
+        <td className="whealth">{r[7]}</td>
+        <td className="wbuff">{buffText}</td>
+        <td className="wsell">
+          <PriceWithTooltip
+            value={r[10]}
+            item={{ name: r[0], category: 'Cooking' }}
+            selection={selection}
+            className="wsell"
+          />
+        </td>
       </tr>
     );
   };
 
   const renderRecipeTable = (indices) => (
-    <table className="recipe-grid-tbl">
+    <table className="wiki-tbl cooking-unified-tbl">
       <thead>
         <tr>
           <th></th>
           <th>Name</th>
           <th>Source</th>
-          <th>Season</th>
           <th>Ingredients</th>
-          <th>Type</th>
+          <th>Energy</th>
+          <th>HP</th>
           <th>Buffs</th>
           <th>Sell</th>
         </tr>
@@ -136,16 +159,67 @@ export default function RecipeList() {
     </table>
   );
 
+  const renderRecipeList = (indices) => indices.map((i) => {
+    const r = recipes[i];
+    const isChecked = !!checked[i];
+    const sourceDetail = r[11] || SOURCE_LABELS[r[4]] || r[4];
+    const buffText = r[8] ? (r[9] ? `${r[8]} (${r[9]})` : r[8]) : '';
+
+    return (
+      <div key={i} className={`rc${isChecked ? ' chk' : ''}`}>
+        <div className="cb" onClick={() => toggle(i)}>
+          <svg className="ck" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <div className="ri" onClick={() => toggle(i)}>
+          <div className="rn">{r[0]}</div>
+          <div className="rm">
+            <span>{seasonLabel(r[2])} · {r[3]}</span>
+            <span className="rm-src">{sourceDetail}</span>
+          </div>
+          {buffText && <div className="rm-buff">{buffText}</div>}
+        </div>
+        <div className="rg-wrap">
+          {r[1].map((ing, j) => {
+            const ingKey = `${i}:${ing}`;
+            const ingChecked = !!ingredientsChecked[ingKey];
+            return (
+              <span
+                key={j}
+                className={`rg-item${ingChecked ? ' rg-done' : ''}`}
+                onClick={(e) => { e.stopPropagation(); toggleIngredient(i, ing); }}
+              >
+                <span className={`rg-check${ingChecked ? ' rg-check-on' : ''}`}>
+                  {ingChecked ? '\u2713' : ''}
+                </span>
+                {ing}
+              </span>
+            );
+          })}
+        </div>
+      </div>
+    );
+  });
+
   if (!groups) {
-    return renderRecipeTable(sorted);
+    return viewMode === 'table' ? renderRecipeTable(sorted) : <>{renderRecipeList(sorted)}</>;
   }
 
   return (
     <>
+      {viewMode === 'list' && (
+        <div className="list-expand-row">
+          <button className="view-btn" onClick={() => setAllGroupsCollapsed(groupKeys, false)}>Expand all</button>
+          <button className="view-btn" onClick={() => setAllGroupsCollapsed(groupKeys, true)}>Collapse all</button>
+        </div>
+      )}
       {Array.from(groups.entries()).map(([gk, indices]) => {
         const key = `${sortMode}:${gk}`;
         const isCollapsed = collapsedGroups[key] ?? isMobile;
-        const label = sortMode === 'source' ? (SOURCE_LABELS[gk] || gk) : seasonLabel(gk);
+        const label = sortMode === 'source'
+          ? (SOURCE_LABELS[gk] || gk)
+          : (sortMode === 'type' ? gk : seasonLabel(gk));
         const doneInGroup = indices.filter((i) => !!checked[i]).length;
 
         return (
@@ -164,7 +238,7 @@ export default function RecipeList() {
             </div>
             {!isCollapsed && (
               <div className="group-items">
-                {renderRecipeTable(indices)}
+                {viewMode === 'table' ? renderRecipeTable(indices) : renderRecipeList(indices)}
               </div>
             )}
           </div>

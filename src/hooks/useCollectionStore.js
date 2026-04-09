@@ -24,6 +24,7 @@ export const useCollectionStore = create(
       searchQueries: {},   // keyed by page name
       filters: {},         // keyed by page name -> 'all' | 'remaining' | 'completed'
       sortModes: {},       // keyed by page name
+      viewModes: {},       // keyed by page name -> 'table' | 'list'
 
       // Toggle actions — generic toggle for any checked map
       toggleItem: (storeKey, itemId) => set((state) => {
@@ -42,6 +43,17 @@ export const useCollectionStore = create(
         next[sectionKey] = !next[sectionKey];
         return { collapsedSections: next };
       }),
+      ensureSectionState: (sectionKey, defaultCollapsed = false) => set((state) => {
+        if (Object.prototype.hasOwnProperty.call(state.collapsedSections, sectionKey)) {
+          return state;
+        }
+        return {
+          collapsedSections: {
+            ...state.collapsedSections,
+            [sectionKey]: defaultCollapsed,
+          },
+        };
+      }),
 
       setSearch: (page, query) => set((state) => ({
         searchQueries: { ...state.searchQueries, [page]: query },
@@ -54,6 +66,18 @@ export const useCollectionStore = create(
       setSort: (page, mode) => set((state) => ({
         sortModes: { ...state.sortModes, [page]: mode },
       })),
+
+      setViewMode: (page, mode) => set((state) => ({
+        viewModes: { ...state.viewModes, [page]: mode },
+      })),
+
+      setSectionsCollapsedByPrefix: (prefix, collapsed) => set((state) => {
+        const next = { ...state.collapsedSections };
+        Object.keys(next).forEach((k) => {
+          if (k.startsWith(prefix)) next[k] = collapsed;
+        });
+        return { collapsedSections: next };
+      }),
 
       // Reset a specific tracker
       resetTracker: (storeKey) => set({ [storeKey]: {} }),
@@ -115,6 +139,7 @@ export const useCollectionStore = create(
         searchQueries: state.searchQueries,
         filters: state.filters,
         sortModes: state.sortModes,
+        viewModes: state.viewModes,
       }),
     }
   )

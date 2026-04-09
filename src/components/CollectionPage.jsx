@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useCollectionStore } from '../hooks/useCollectionStore';
 
 // Shared checkbox SVG
@@ -14,7 +14,12 @@ export function Checkmark() {
 export function SectionHeader({ sectionKey, label, done, total, defaultOpen = true }) {
   const collapsed = useCollectionStore((s) => s.collapsedSections);
   const toggleSection = useCollectionStore((s) => s.toggleSection);
+  const ensureSectionState = useCollectionStore((s) => s.ensureSectionState);
   const isCollapsed = collapsed[sectionKey] ?? !defaultOpen;
+
+  useEffect(() => {
+    ensureSectionState(sectionKey, !defaultOpen);
+  }, [defaultOpen, ensureSectionState, sectionKey]);
 
   return (
     <div
@@ -38,17 +43,30 @@ export function SectionHeader({ sectionKey, label, done, total, defaultOpen = tr
 
 // Search + filter + sort controls
 // Pass done/total to show counts in the filter buttons
-export function CollectionControls({ page, sortOptions, done = null, total = null }) {
+export function CollectionControls({
+  page,
+  sortOptions,
+  done = null,
+  total = null,
+  enableViewToggle = false,
+  defaultViewMode = 'list',
+  showExpandCollapse = false,
+  collapsePrefix = '',
+}) {
   const searchQueries = useCollectionStore((s) => s.searchQueries);
   const filters = useCollectionStore((s) => s.filters);
   const sortModes = useCollectionStore((s) => s.sortModes);
+  const viewModes = useCollectionStore((s) => s.viewModes);
   const setSearch = useCollectionStore((s) => s.setSearch);
   const setFilter = useCollectionStore((s) => s.setFilter);
   const setSort = useCollectionStore((s) => s.setSort);
+  const setViewMode = useCollectionStore((s) => s.setViewMode);
+  const setSectionsCollapsedByPrefix = useCollectionStore((s) => s.setSectionsCollapsedByPrefix);
 
   const query = searchQueries[page] || '';
   const filter = filters[page] || 'all';
   const sort = sortModes[page] || (sortOptions?.[0]?.value ?? 'alpha');
+  const viewMode = viewModes[page] || defaultViewMode;
 
   const hasCounts = done !== null && total !== null;
   const rem = hasCounts ? total - done : null;
@@ -61,18 +79,18 @@ export function CollectionControls({ page, sortOptions, done = null, total = nul
 
   return (
     <div className="collection-controls">
-      <div className="filter-bar">
-        {['all', 'remaining', 'completed'].map((f) => (
-          <button
-            key={f}
-            className={`filter-btn${filter === f ? ' active' : ''}`}
-            onClick={() => setFilter(page, f)}
-          >
-            {filterLabels[f]}
-          </button>
-        ))}
-      </div>
-      <div className="controls-bar">
+      <div className="controls-bar collection-controls-one-line">
+        <div className="filter-bar collection-filter-inline">
+          {['all', 'remaining', 'completed'].map((f) => (
+            <button
+              key={f}
+              className={`filter-btn${filter === f ? ' active' : ''}`}
+              onClick={() => setFilter(page, f)}
+            >
+              {filterLabels[f]}
+            </button>
+          ))}
+        </div>
         <div className="search-wrap">
           <input
             type="text"
@@ -93,6 +111,28 @@ export function CollectionControls({ page, sortOptions, done = null, total = nul
                 <option key={o.value} value={o.value}>{o.label}</option>
               ))}
             </select>
+          </div>
+        )}
+        {enableViewToggle && (
+          <div className="view-wrap">
+            <button
+              className={`view-btn${viewMode === 'table' ? ' active' : ''}`}
+              onClick={() => setViewMode(page, 'table')}
+            >
+              Table
+            </button>
+            <button
+              className={`view-btn${viewMode === 'list' ? ' active' : ''}`}
+              onClick={() => setViewMode(page, 'list')}
+            >
+              List
+            </button>
+          </div>
+        )}
+        {showExpandCollapse && viewMode === 'list' && collapsePrefix && (
+          <div className="view-wrap">
+            <button className="view-btn" onClick={() => setSectionsCollapsedByPrefix(collapsePrefix, false)}>Expand all</button>
+            <button className="view-btn" onClick={() => setSectionsCollapsedByPrefix(collapsePrefix, true)}>Collapse all</button>
           </div>
         )}
       </div>

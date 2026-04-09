@@ -11,6 +11,7 @@ export const useBundleStore = create(
       categoryFilter: 'all',
       bundleSearch: '',
       collapsedBundles: {},
+      viewMode: 'list',
 
       // Checked state — delegates to collection store
       get bundleChecked() {
@@ -22,16 +23,36 @@ export const useBundleStore = create(
         const key = `${roomKey}:${bundleName}:${itemName}`;
         useCollectionStore.getState().toggleItem('bundleChecked', key);
       },
+      setBundleItemsChecked: (roomKey, bundleName, items, checked) => {
+        const store = useCollectionStore.getState();
+        const next = { ...store.bundleChecked };
+        items.forEach((item) => {
+          const itemName = Array.isArray(item) ? item[0] : item;
+          const key = `${roomKey}:${bundleName}:${itemName}`;
+          if (checked) next[key] = true;
+          else delete next[key];
+        });
+        useCollectionStore.setState({ bundleChecked: next });
+      },
 
       setActiveRoom: (room) => set({ activeRoom: room }),
       setSeasonFilter: (season) => set({ seasonFilter: season }),
       setCategoryFilter: (category) => set({ categoryFilter: category }),
       setBundleSearch: (query) => set({ bundleSearch: query }),
+      setViewMode: (mode) => set({ viewMode: mode }),
 
       toggleBundleCollapse: (roomKey, bundleName, defaultCollapsed) => set((state) => {
         const key = `${roomKey}:${bundleName}`;
         const current = state.collapsedBundles[key] ?? defaultCollapsed;
         return { collapsedBundles: { ...state.collapsedBundles, [key]: !current } };
+      }),
+      setAllBundlesCollapsed: (roomKey, bundleNames, collapsed) => set((state) => {
+        const next = { ...state.collapsedBundles };
+        bundleNames.forEach((bundleName) => {
+          const key = `${roomKey}:${bundleName}`;
+          next[key] = collapsed;
+        });
+        return { collapsedBundles: next };
       }),
 
       resetBundles: () => {
@@ -67,10 +88,12 @@ export const useBundleStore = create(
       migrate: () => ({
         activeRoom: 'crafts',
         collapsedBundles: {},
+        viewMode: 'list',
       }),
       partialize: (state) => ({
         activeRoom: state.activeRoom,
         collapsedBundles: state.collapsedBundles,
+        viewMode: state.viewMode,
       }),
     }
   )

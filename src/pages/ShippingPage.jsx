@@ -4,12 +4,13 @@ import { useCollectionSync } from '../hooks/useCollectionSync';
 import { SHIPPING, SHIPPING_CATEGORIES } from '../data/shipping';
 import {
   CollectionHeader, CollectionControls, SectionHeader,
-  CollectionItem, useFilteredItems,
+  CollectionItem, Checkmark, useFilteredItems,
 } from '../components/CollectionPage';
 
 const SORT_OPTIONS = [
   { value: 'category', label: 'By Category' },
   { value: 'alpha', label: 'A-Z' },
+  { value: 'alpha_desc', label: 'Z-A' },
   { value: 'season', label: 'By Season' },
 ];
 
@@ -18,7 +19,9 @@ export default function ShippingPage() {
   const shippingChecked = useCollectionStore((s) => s.shippingChecked);
   const toggleItem = useCollectionStore((s) => s.toggleItem);
   const sortModes = useCollectionStore((s) => s.sortModes);
+  const viewModes = useCollectionStore((s) => s.viewModes);
   const sort = sortModes['shipping'] || 'category';
+  const viewMode = viewModes['shipping'] || 'list';
 
   const done = Object.keys(shippingChecked).length;
   const total = SHIPPING.length;
@@ -32,8 +35,9 @@ export default function ShippingPage() {
   const grouped = useMemo(() => {
     let sorted = [...filtered];
 
-    if (sort === 'alpha') {
+    if (sort === 'alpha' || sort === 'alpha_desc') {
       sorted.sort((a, b) => a.name.localeCompare(b.name));
+      if (sort === 'alpha_desc') sorted.reverse();
       return [['All Items', sorted]];
     }
 
@@ -63,7 +67,16 @@ export default function ShippingPage() {
   return (
     <div className="container">
       <CollectionHeader title="Shipping Collection" done={done} total={total} colorClass="shipping-progress" icon="📦" />
-      <CollectionControls page="shipping" sortOptions={SORT_OPTIONS} done={done} total={total} />
+      <CollectionControls
+        page="shipping"
+        sortOptions={SORT_OPTIONS}
+        done={done}
+        total={total}
+        enableViewToggle={true}
+        defaultViewMode="list"
+        showExpandCollapse={true}
+        collapsePrefix="shipping:"
+      />
       <div className="panel">
         {grouped.map(([group, items]) => {
           const groupDone = items.filter((s) => shippingChecked[s.name]).length;
@@ -76,7 +89,13 @@ export default function ShippingPage() {
                 total={items.length}
                 defaultOpen={true}
               />
-              <SectionItems items={items} shippingChecked={shippingChecked} toggleItem={toggleItem} sectionKey={`shipping:${group}`} />
+              <SectionItems
+                items={items}
+                shippingChecked={shippingChecked}
+                toggleItem={toggleItem}
+                sectionKey={`shipping:${group}`}
+                viewMode={viewMode}
+              />
             </div>
           );
         })}
@@ -86,9 +105,39 @@ export default function ShippingPage() {
   );
 }
 
-function SectionItems({ items, shippingChecked, toggleItem, sectionKey }) {
+function SectionItems({ items, shippingChecked, toggleItem, sectionKey, viewMode }) {
   const collapsed = useCollectionStore((s) => s.collapsedSections);
   if (collapsed[sectionKey]) return null;
+
+  if (viewMode === 'table') {
+    return (
+      <table className="fish-grid-tbl">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Name</th>
+            <th>Source</th>
+            <th>Season</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((item) => (
+            <tr
+              key={item.name}
+              className={shippingChecked[item.name] ? 'chk' : ''}
+              onClick={() => toggleItem('shippingChecked', item.name)}
+              style={{ cursor: 'pointer' }}
+            >
+              <td><div className={`fish-grid-check${shippingChecked[item.name] ? ' checked' : ''}`}><Checkmark /></div></td>
+              <td className="fish-grid-name">{item.name}</td>
+              <td>{item.source}</td>
+              <td><span className="cc-item-seasons">{item.season?.map((s) => <span key={s} className={`cc-season cc-season-${s.toLowerCase()}`}>{s}</span>)}</span></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    );
+  }
 
   return items.map((item) => (
     <CollectionItem

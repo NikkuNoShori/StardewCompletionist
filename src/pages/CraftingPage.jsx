@@ -4,12 +4,13 @@ import { useCollectionSync } from '../hooks/useCollectionSync';
 import { CRAFTING, CRAFTING_CATEGORIES } from '../data/crafting';
 import {
   CollectionHeader, CollectionControls, SectionHeader,
-  CollectionItem, useFilteredItems,
+  CollectionItem, Checkmark, useFilteredItems,
 } from '../components/CollectionPage';
 
 const SORT_OPTIONS = [
   { value: 'category', label: 'By Category' },
   { value: 'alpha', label: 'A-Z' },
+  { value: 'alpha_desc', label: 'Z-A' },
   { value: 'unlock', label: 'By Unlock Source' },
 ];
 
@@ -18,7 +19,9 @@ export default function CraftingPage() {
   const craftingChecked = useCollectionStore((s) => s.craftingChecked);
   const toggleItem = useCollectionStore((s) => s.toggleItem);
   const sortModes = useCollectionStore((s) => s.sortModes);
+  const viewModes = useCollectionStore((s) => s.viewModes);
   const sort = sortModes['crafting'] || 'category';
+  const viewMode = viewModes['crafting'] || 'list';
 
   const done = Object.keys(craftingChecked).length;
   const total = CRAFTING.length;
@@ -32,8 +35,9 @@ export default function CraftingPage() {
   const grouped = useMemo(() => {
     let sorted = [...filtered];
 
-    if (sort === 'alpha') {
+    if (sort === 'alpha' || sort === 'alpha_desc') {
       sorted.sort((a, b) => a.name.localeCompare(b.name));
+      if (sort === 'alpha_desc') sorted.reverse();
       return [['All Recipes', sorted]];
     }
 
@@ -54,7 +58,16 @@ export default function CraftingPage() {
   return (
     <div className="container">
       <CollectionHeader title="Crafting Recipes" done={done} total={total} colorClass="crafting-progress" icon="🔨" />
-      <CollectionControls page="crafting" sortOptions={SORT_OPTIONS} done={done} total={total} />
+      <CollectionControls
+        page="crafting"
+        sortOptions={SORT_OPTIONS}
+        done={done}
+        total={total}
+        enableViewToggle={true}
+        defaultViewMode="list"
+        showExpandCollapse={true}
+        collapsePrefix="crafting:"
+      />
       <div className="panel">
         {grouped.map(([group, items]) => {
           const groupDone = items.filter((c) => craftingChecked[c.name]).length;
@@ -67,7 +80,13 @@ export default function CraftingPage() {
                 total={items.length}
                 defaultOpen={true}
               />
-              <SectionItems items={items} craftingChecked={craftingChecked} toggleItem={toggleItem} sectionKey={`crafting:${group}`} />
+              <SectionItems
+                items={items}
+                craftingChecked={craftingChecked}
+                toggleItem={toggleItem}
+                sectionKey={`crafting:${group}`}
+                viewMode={viewMode}
+              />
             </div>
           );
         })}
@@ -77,9 +96,39 @@ export default function CraftingPage() {
   );
 }
 
-function SectionItems({ items, craftingChecked, toggleItem, sectionKey }) {
+function SectionItems({ items, craftingChecked, toggleItem, sectionKey, viewMode }) {
   const collapsed = useCollectionStore((s) => s.collapsedSections);
   if (collapsed[sectionKey]) return null;
+
+  if (viewMode === 'table') {
+    return (
+      <table className="fish-grid-tbl">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Name</th>
+            <th>Ingredients</th>
+            <th>Unlock</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((item) => (
+            <tr
+              key={item.name}
+              className={craftingChecked[item.name] ? 'chk' : ''}
+              onClick={() => toggleItem('craftingChecked', item.name)}
+              style={{ cursor: 'pointer' }}
+            >
+              <td><div className={`fish-grid-check${craftingChecked[item.name] ? ' checked' : ''}`}><Checkmark /></div></td>
+              <td className="fish-grid-name">{item.name}</td>
+              <td>{item.ingredients}</td>
+              <td>{item.unlock}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    );
+  }
 
   return items.map((item) => (
     <CollectionItem

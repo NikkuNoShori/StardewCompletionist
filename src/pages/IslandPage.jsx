@@ -1,16 +1,17 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useCollectionStore } from '../hooks/useCollectionStore';
 import { useCollectionSync } from '../hooks/useCollectionSync';
 import { WALNUTS, WALNUT_AREAS } from '../data/walnuts';
 import { FIELD_OFFICE_ITEMS, FIELD_OFFICE_SURVEYS } from '../data/fieldOffice';
 import {
   CollectionHeader, CollectionControls, SectionHeader,
-  CollectionItem,
+  CollectionItem, Checkmark,
 } from '../components/CollectionPage';
 
 const SORT_OPTIONS = [
   { value: 'area', label: 'By Area' },
   { value: 'alpha', label: 'A-Z' },
+  { value: 'alpha_desc', label: 'Z-A' },
 ];
 
 const ALL_WALNUTS = WALNUTS.filter((w) => w.count > 0);
@@ -20,7 +21,12 @@ const WALNUT_TOTAL = WALNUTS.reduce((s, w) => s + w.count, 0);
 function CategoryHeader({ label, done, total, sectionKey }) {
   const collapsed = useCollectionStore((s) => s.collapsedSections);
   const toggleSection = useCollectionStore((s) => s.toggleSection);
+  const ensureSectionState = useCollectionStore((s) => s.ensureSectionState);
   const isCollapsed = collapsed[sectionKey] ?? false;
+
+  useEffect(() => {
+    ensureSectionState(sectionKey, false);
+  }, [ensureSectionState, sectionKey]);
 
   return (
     <div
@@ -42,9 +48,40 @@ function CategoryHeader({ label, done, total, sectionKey }) {
   );
 }
 
-function CollapsibleItems({ items, sectionKey, checkedMap, storeKey, toggleItem }) {
+function CollapsibleItems({ items, sectionKey, checkedMap, storeKey, toggleItem, viewMode }) {
   const collapsed = useCollectionStore((s) => s.collapsedSections);
   if (collapsed[sectionKey]) return null;
+
+  if (viewMode === 'table') {
+    return (
+      <table className="fish-grid-tbl">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Name</th>
+            <th>Source</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((item, idx) => {
+            const itemId = item.id || item.name;
+            return (
+              <tr
+                key={item.id || `${item.name}-${idx}`}
+                className={checkedMap[itemId] ? 'chk' : ''}
+                onClick={() => toggleItem(storeKey, itemId)}
+                style={{ cursor: 'pointer' }}
+              >
+                <td><div className={`fish-grid-check${checkedMap[itemId] ? ' checked' : ''}`}><Checkmark /></div></td>
+                <td className="fish-grid-name">{item.description || item.name}</td>
+                <td>{item.area || item.source}{item.tip ? ` — ${item.tip}` : ''}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    );
+  }
 
   return items.map((item, idx) => (
     <CollectionItem
@@ -72,7 +109,9 @@ export default function IslandPage() {
   const sortModes = useCollectionStore((s) => s.sortModes);
   const searchQueries = useCollectionStore((s) => s.searchQueries);
   const filters = useCollectionStore((s) => s.filters);
+  const viewModes = useCollectionStore((s) => s.viewModes);
   const sort = sortModes['island'] || 'area';
+  const viewMode = viewModes['island'] || 'list';
   const query = (searchQueries['island'] || '').toLowerCase().trim();
   const filter = filters['island'] || 'all';
 
@@ -104,8 +143,9 @@ export default function IslandPage() {
 
   // Group walnuts by area
   const walnutGroups = useMemo(() => {
-    if (sort === 'alpha') {
+    if (sort === 'alpha' || sort === 'alpha_desc') {
       const sorted = [...filteredWalnuts].sort((a, b) => a.description.localeCompare(b.description));
+      if (sort === 'alpha_desc') sorted.reverse();
       return [['All Walnuts', sorted]];
     }
     const groups = {};
@@ -138,7 +178,16 @@ export default function IslandPage() {
         colorClass="island-progress"
         icon="🌴"
       />
-      <CollectionControls page="island" sortOptions={SORT_OPTIONS} done={walnutDone + foDone} total={WALNUT_TOTAL + foTotal} />
+      <CollectionControls
+        page="island"
+        sortOptions={SORT_OPTIONS}
+        done={walnutDone + foDone}
+        total={WALNUT_TOTAL + foTotal}
+        enableViewToggle={true}
+        defaultViewMode="list"
+        showExpandCollapse={true}
+        collapsePrefix="island:"
+      />
       <div className="panel">
         {/* Golden Walnuts category */}
         {filteredWalnuts.length > 0 && (
@@ -166,6 +215,7 @@ export default function IslandPage() {
                     checkedMap={walnutChecked}
                     storeKey="walnutChecked"
                     toggleItem={toggleItem}
+                    viewMode={viewMode}
                   />
                 </div>
               );
@@ -199,6 +249,7 @@ export default function IslandPage() {
                     checkedMap={fieldOfficeChecked}
                     storeKey="fieldOfficeChecked"
                     toggleItem={toggleItem}
+                    viewMode={viewMode}
                   />
                 </div>
               );

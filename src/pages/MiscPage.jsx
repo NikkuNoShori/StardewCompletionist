@@ -4,11 +4,12 @@ import { useCollectionSync } from '../hooks/useCollectionSync';
 import { STARDROPS } from '../data/stardrops';
 import { SECRET_NOTES, JOURNAL_SCRAPS } from '../data/secretNotes';
 import { MONSTER_GOALS } from '../data/monsters';
-import { CollectionHeader, CollectionControls, SectionHeader, CollectionItem } from '../components/CollectionPage';
+import { CollectionHeader, CollectionControls, SectionHeader, CollectionItem, Checkmark } from '../components/CollectionPage';
 
 const SORT_OPTIONS = [
   { value: 'category', label: 'By Category' },
   { value: 'alpha', label: 'A-Z' },
+  { value: 'alpha_desc', label: 'Z-A' },
 ];
 
 // Build a flat list of all misc items with a unified shape
@@ -48,6 +49,7 @@ export default function MiscPage() {
   const searchQueries = useCollectionStore((s) => s.searchQueries);
   const filters = useCollectionStore((s) => s.filters);
   const sortModes = useCollectionStore((s) => s.sortModes);
+  const viewModes = useCollectionStore((s) => s.viewModes);
 
   const checkedMaps = { stardropChecked, secretNoteChecked, journalScrapChecked, monsterChecked };
 
@@ -61,6 +63,7 @@ export default function MiscPage() {
   const query = (searchQueries['misc'] || '').toLowerCase().trim();
   const filter = filters['misc'] || 'all';
   const sort = sortModes['misc'] || 'category';
+  const viewMode = viewModes['misc'] || 'list';
 
   const filtered = useMemo(() => {
     return ALL_MISC_ITEMS.filter((item) => {
@@ -73,8 +76,9 @@ export default function MiscPage() {
   }, [query, filter, stardropChecked, secretNoteChecked, journalScrapChecked, monsterChecked]);
 
   const grouped = useMemo(() => {
-    if (sort === 'alpha') {
+    if (sort === 'alpha' || sort === 'alpha_desc') {
       const sorted = [...filtered].sort((a, b) => a.name.localeCompare(b.name));
+      if (sort === 'alpha_desc') sorted.reverse();
       return [['All Items', sorted]];
     }
     const groups = {};
@@ -88,7 +92,16 @@ export default function MiscPage() {
   return (
     <div className="container">
       <CollectionHeader title="Misc Trackers" done={totalDone} total={totalItems} colorClass="misc-progress" icon="⭐" />
-      <CollectionControls page="misc" sortOptions={SORT_OPTIONS} done={totalDone} total={totalItems} />
+      <CollectionControls
+        page="misc"
+        sortOptions={SORT_OPTIONS}
+        done={totalDone}
+        total={totalItems}
+        enableViewToggle={true}
+        defaultViewMode="list"
+        showExpandCollapse={true}
+        collapsePrefix="misc:"
+      />
       <div className="panel">
         {grouped.map(([group, items]) => {
           const groupDone = items.filter((i) => isItemChecked(i, checkedMaps)).length;
@@ -101,7 +114,13 @@ export default function MiscPage() {
                 total={items.length}
                 defaultOpen={true}
               />
-              <MiscSectionItems items={items} checkedMaps={checkedMaps} toggleItem={toggleItem} sectionKey={`misc:${group}`} />
+              <MiscSectionItems
+                items={items}
+                checkedMaps={checkedMaps}
+                toggleItem={toggleItem}
+                sectionKey={`misc:${group}`}
+                viewMode={viewMode}
+              />
             </div>
           );
         })}
@@ -111,9 +130,39 @@ export default function MiscPage() {
   );
 }
 
-function MiscSectionItems({ items, checkedMaps, toggleItem, sectionKey }) {
+function MiscSectionItems({ items, checkedMaps, toggleItem, sectionKey, viewMode }) {
   const collapsed = useCollectionStore((s) => s.collapsedSections);
   if (collapsed[sectionKey]) return null;
+
+  if (viewMode === 'table') {
+    return (
+      <table className="fish-grid-tbl">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((item) => (
+            <tr
+              key={`${item.storeKey}-${item.id}`}
+              className={isItemChecked(item, checkedMaps) ? 'chk' : ''}
+              onClick={() => toggleItem(item.storeKey, item.id)}
+              style={{ cursor: 'pointer' }}
+            >
+              <td><div className={`fish-grid-check${isItemChecked(item, checkedMaps) ? ' checked' : ''}`}><Checkmark /></div></td>
+              <td className="fish-grid-name">{item.name}</td>
+              <td>{item.category}</td>
+              <td>{item.meta || item.detail || '—'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    );
+  }
 
   return items.map((item) => (
     <CollectionItem

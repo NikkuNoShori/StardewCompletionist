@@ -7,17 +7,18 @@ import FilterBar from '../components/FilterBar';
 import ControlsBar from '../components/ControlsBar';
 import RecipeList from '../components/RecipeList';
 import IngredientTable from '../components/IngredientTable';
-import WikiTable from '../components/WikiTable';
 import ActionButtons from '../components/ActionButtons';
 
 export default function Home() {
   useSupabaseSync();
   const currentTab = useRecipeStore((s) => s.currentTab);
+  const setTab = useRecipeStore((s) => s.setTab);
   const setFilter = useRecipeStore((s) => s.setFilter);
 
   useEffect(() => {
     setFilter('all');
-  }, [setFilter]);
+    if (currentTab === 'wiki') setTab('recipes');
+  }, [setFilter, currentTab, setTab]);
 
   return (
     <>
@@ -26,12 +27,13 @@ export default function Home() {
         <div className="tab-bar-top">
           <TabBar />
         </div>
-        <FilterBar />
-        <ControlsBar />
+        <div className="controls-bar collection-controls-one-line">
+          <FilterBar inline />
+          <ControlsBar inline />
+        </div>
         <div className="panel">
           {currentTab === 'recipes' && <RecipeList />}
           {currentTab === 'ingredients' && <IngredientTable />}
-          {currentTab === 'wiki' && <WikiTable />}
         </div>
         <ActionButtons />
       </div>

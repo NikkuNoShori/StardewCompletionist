@@ -1,7 +1,7 @@
 import { useRecipeStore } from '../hooks/useRecipeStore';
 import { useCollectionStore } from '../hooks/useCollectionStore';
 
-export default function FilterBar() {
+export default function FilterBar({ inline = false }) {
   const currentFilter = useRecipeStore((s) => s.currentFilter);
   const setFilter = useRecipeStore((s) => s.setFilter);
   const checked = useCollectionStore((s) => s.recipeChecked);
@@ -18,7 +18,7 @@ export default function FilterBar() {
   ];
 
   return (
-    <div className="filter-bar">
+    <div className={`filter-bar${inline ? ' collection-filter-inline' : ''}`}>
       {filters.map((f) => (
         <button
           key={f.key}

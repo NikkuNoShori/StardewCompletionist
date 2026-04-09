@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback, useEffect } from 'react';
 import { useCollectionStore } from '../hooks/useCollectionStore';
 import { useCollectionSync } from '../hooks/useCollectionSync';
 import { FISH, FISH_CATEGORIES } from '../data/fish';
@@ -15,11 +15,19 @@ import {
 
 const SORT_OPTIONS = [
   { value: 'alpha', label: 'A-Z' },
+  { value: 'alpha_desc', label: 'Z-A' },
   { value: 'category', label: 'By Category' },
   { value: 'season', label: 'By Season' },
   { value: 'location', label: 'By Location' },
+  { value: 'location_desc', label: 'By Location (Z-A)' },
+  { value: 'weather', label: 'By Weather' },
+  { value: 'weather_desc', label: 'By Weather (Z-A)' },
+  { value: 'price', label: 'By Sell Price' },
+  { value: 'price_asc', label: 'By Sell Price (Low-High)' },
   { value: 'difficulty', label: 'By Difficulty' },
+  { value: 'difficulty_asc', label: 'By Difficulty (Easy-Hard)' },
 ];
+const VALID_SORT_VALUES = new Set(SORT_OPTIONS.map((o) => o.value));
 
 function DifficultyBadge({ difficulty }) {
   if (difficulty === 0) return null;
@@ -46,8 +54,18 @@ export default function FishPage() {
   const fishChecked = useCollectionStore((s) => s.fishChecked);
   const toggleItem = useCollectionStore((s) => s.toggleItem);
   const sortModes = useCollectionStore((s) => s.sortModes);
-  const sort = sortModes['fish'] || 'category';
+  const viewModes = useCollectionStore((s) => s.viewModes);
+  const setSort = useCollectionStore((s) => s.setSort);
+  const rawSort = sortModes['fish'] || 'category';
+  const sort = VALID_SORT_VALUES.has(rawSort) ? rawSort : 'category';
+  const viewMode = viewModes['fish'] || 'table';
   const { selection, priceFilterMode } = useProfession();
+
+  useEffect(() => {
+    if (rawSort !== sort) {
+      setSort('fish', sort);
+    }
+  }, [rawSort, setSort, sort]);
   const professionPredicate = useMemo(
     () => createProfessionPricePredicate(
       priceFilterMode,
@@ -68,9 +86,26 @@ export default function FishPage() {
 
   const grouped = useMemo(() => {
     let sorted = [...filtered];
-    if (sort === 'alpha') sorted.sort((a, b) => a.name.localeCompare(b.name));
-    else if (sort === 'difficulty') sorted.sort((a, b) => b.difficulty - a.difficulty);
-    else if (sort === 'location') sorted.sort((a, b) => a.location.localeCompare(b.location));
+    if (sort === 'alpha' || sort === 'alpha_desc') {
+      sorted.sort((a, b) => a.name.localeCompare(b.name));
+      if (sort === 'alpha_desc') sorted.reverse();
+    } else if (sort === 'difficulty' || sort === 'difficulty_asc') {
+      sorted.sort((a, b) => a.difficulty - b.difficulty);
+      if (sort === 'difficulty') sorted.reverse();
+    } else if (sort === 'location' || sort === 'location_desc') {
+      sorted.sort((a, b) => a.location.localeCompare(b.location));
+      if (sort === 'location_desc') sorted.reverse();
+    } else if (sort === 'weather' || sort === 'weather_desc') {
+      sorted.sort((a, b) => a.weather.localeCompare(b.weather));
+      if (sort === 'weather_desc') sorted.reverse();
+    } else if (sort === 'price' || sort === 'price_asc') {
+      sorted.sort((a, b) => {
+        const pa = getPriceDisplay(a.price, { ...a, priceTags: ['fish'] }, selection);
+        const pb = getPriceDisplay(b.price, { ...b, priceTags: ['fish'] }, selection);
+        return pa.adjustedPrice - pb.adjustedPrice;
+      });
+      if (sort === 'price') sorted.reverse();
+    }
 
     if (sort === 'category') {
       const groups = {};
@@ -94,12 +129,41 @@ export default function FishPage() {
     }
 
     return [['All Fish', sorted]];
-  }, [filtered, sort]);
+  }, [filtered, sort, selection]);
+
+  const toggleSortMode = useCallback((ascMode, descMode = null) => {
+    const nextDescMode = descMode || `${ascMode}_desc`;
+    if (sort === ascMode) {
+      setSort('fish', nextDescMode);
+      return;
+    }
+    if (sort === nextDescMode) {
+      setSort('fish', ascMode);
+      return;
+    }
+    setSort('fish', ascMode);
+  }, [setSort, sort]);
+
+  const sortArrow = useCallback((ascMode, descMode = null) => {
+    const activeDescMode = descMode || `${ascMode}_desc`;
+    if (sort === ascMode) return ' \u2191';
+    if (sort === activeDescMode) return ' \u2193';
+    return ' \u21D5';
+  }, [sort]);
 
   return (
     <div className="container">
       <CollectionHeader title="Fish Collection" done={done} total={total} colorClass="fish-progress" />
-      <CollectionControls page="fish" sortOptions={SORT_OPTIONS} done={done} total={total} />
+      <CollectionControls
+        page="fish"
+        sortOptions={SORT_OPTIONS}
+        done={done}
+        total={total}
+        enableViewToggle={true}
+        defaultViewMode="table"
+        showExpandCollapse={true}
+        collapsePrefix="fish:"
+      />
       <div className="panel">
         {grouped.map(([group, items]) => {
           const groupDone = items.filter((f) => fishChecked[f.name]).length;
@@ -118,6 +182,9 @@ export default function FishPage() {
                 toggleItem={toggleItem}
                 sectionKey={`fish:${group}`}
                 professionSelection={selection}
+                onSortClick={toggleSortMode}
+                sortArrow={sortArrow}
+                viewMode={viewMode}
               />
             </div>
           );
@@ -128,22 +195,68 @@ export default function FishPage() {
   );
 }
 
-function SectionItems({ items, fishChecked, toggleItem, sectionKey, professionSelection }) {
+function SectionItems({
+  items,
+  fishChecked,
+  toggleItem,
+  sectionKey,
+  professionSelection,
+  onSortClick,
+  sortArrow,
+  viewMode,
+}) {
   const collapsed = useCollectionStore((s) => s.collapsedSections);
   if (collapsed[sectionKey]) return null;
+
+  if (viewMode === 'list') {
+    return items.map((fish) => (
+      <div key={fish.name} className={`cc-item${fishChecked[fish.name] ? ' cc-item-done' : ''}`} onClick={() => toggleItem('fishChecked', fish.name)}>
+        <div className="cc-item-check"><Checkmark /></div>
+        <div className="cc-item-info">
+          <div className="cc-item-top">
+            <span className="cc-item-name">{fish.name}</span>
+            <DifficultyBadge difficulty={fish.difficulty} />
+          </div>
+          <div className="cc-item-meta">
+            <span className="cc-item-source">{fish.location}</span>
+            <SeasonTags seasons={fish.season} />
+            {fish.time !== 'Any' && <span className="cc-item-source">{fish.time}</span>}
+            {fish.weather !== 'Any' ? <span className="fish-weather">{fish.weather}</span> : null}
+            <PriceWithTooltip
+              value={fish.price}
+              item={{ ...fish, priceTags: ['fish'] }}
+              selection={professionSelection}
+              className="fish-price"
+            />
+          </div>
+          {fish.note && <div className="cc-item-source" style={{ marginTop: 2 }}>{fish.note}</div>}
+        </div>
+      </div>
+    ));
+  }
 
   return (
     <table className="fish-grid-tbl">
       <thead>
         <tr>
           <th></th>
-          <th>Name</th>
-          <th>Source</th>
+          <th className="fish-th-sort" onClick={() => onSortClick('alpha')}>
+            Name{sortArrow('alpha')}
+          </th>
+          <th className="fish-th-sort" onClick={() => onSortClick('location')}>
+            Source{sortArrow('location')}
+          </th>
           <th>Season</th>
           <th>Time</th>
-          <th>Weather</th>
-          <th>Difficulty</th>
-          <th>Sell</th>
+          <th className="fish-th-sort" onClick={() => onSortClick('weather')}>
+            Weather{sortArrow('weather')}
+          </th>
+          <th className="fish-th-sort" onClick={() => onSortClick('difficulty', 'difficulty_asc')}>
+            Difficulty{sortArrow('difficulty_asc', 'difficulty')}
+          </th>
+          <th className="fish-th-sort" onClick={() => onSortClick('price', 'price_asc')}>
+            Sell{sortArrow('price_asc', 'price')}
+          </th>
         </tr>
       </thead>
       <tbody>
