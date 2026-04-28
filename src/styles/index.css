@@ -274,7 +274,9 @@ body {
   width: 220px; background: var(--wood-dark);
   border-right: 3px solid var(--wood-darker);
   display: flex; flex-direction: column;
-  position: sticky; top: 0; height: 100vh;
+  position: sticky; top: 0;
+  height: 100vh;
+  height: 100dvh;
   overflow-y: auto; flex-shrink: 0;
   box-shadow: 2px 0 8px rgba(0,0,0,.3);
 }
@@ -339,7 +341,9 @@ body {
 
 .sidebar-footer {
   padding: 0 0 12px;
+  display: flex; flex-direction: column; align-items: center;
 }
+.sidebar-footer .sidebar-divider { align-self: stretch; }
 .sidebar-user {
   padding: 10px 16px; display: flex; flex-direction: column; gap: 6px;
 }
@@ -355,7 +359,7 @@ body {
 }
 .sidebar-signout:hover { background: var(--text-muted); }
 .sidebar-signin {
-  display: block; margin: 10px 16px; padding: 8px 12px;
+  display: inline-block; margin: 10px 0; padding: 8px 20px;
   font-family: 'VT323', monospace; font-size: 1rem;
   background: var(--wood); color: #fff8e1;
   border: 2px solid var(--wood-darker); border-radius: 6px;
@@ -1735,7 +1739,10 @@ h1 {
   /* Sidebar becomes a drawer on tablet */
   .sidebar {
     position: fixed; left: -260px; top: 0; z-index: 80;
-    width: 240px; transition: left .25s ease;
+    width: 240px;
+    height: 100vh;
+    height: 100dvh;
+    transition: left .25s ease;
   }
   .sidebar.open { left: 0; }
   .sidebar-overlay {
@@ -1758,7 +1765,10 @@ h1 {
   /* Sidebar drawer */
   .sidebar {
     position: fixed; left: -260px; top: 0; z-index: 80;
-    width: 240px; transition: left .25s ease;
+    width: 240px;
+    height: 100vh;
+    height: 100dvh;
+    transition: left .25s ease;
   }
   .sidebar.open { left: 0; }
   .sidebar-overlay {
