@@ -1704,6 +1704,15 @@ h1 {
   outline: none; margin-bottom: 10px; background: #fff;
 }
 .modal-input:focus { border-color: var(--gold); }
+.modal-password-wrap { position: relative; }
+.modal-password-wrap .modal-input { padding-right: 40px; }
+.modal-password-toggle {
+  position: absolute; top: 0; right: 0; height: 42px; width: 38px;
+  display: flex; align-items: center; justify-content: center;
+  background: none; border: none; cursor: pointer; padding: 0;
+  color: var(--text-muted); opacity: .8;
+}
+.modal-password-toggle:hover { opacity: 1; color: var(--wood-dark); }
 .modal-submit {
   width: 100%; padding: 10px; border: 3px solid var(--wood-dark);
   border-radius: 8px; background: var(--wood); color: #fff8e1;
