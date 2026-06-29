@@ -286,22 +286,6 @@ export default function SpawnCodesPage() {
             Favorites ({favorites.size})
           </button>
         </div>
-        <div className="spawn-cat-filters spawn-cat-filters-inline">
-          {SPAWN_CATEGORIES.map((cat) => (
-            <button
-              key={cat}
-              className={`spawn-cat-pill${activeCategories.has(cat) ? ' active' : ''}`}
-              onClick={() => toggleCategory(cat)}
-            >
-              {cat}
-            </button>
-          ))}
-          {activeCategories.size > 0 && (
-            <button className="spawn-cat-pill spawn-cat-clear" onClick={() => setActiveCategories(new Set())}>
-              Clear
-            </button>
-          )}
-        </div>
         <div className="search-wrap">
           <input
             type="text"
@@ -343,6 +327,24 @@ export default function SpawnCodesPage() {
             List
           </button>
         </div>
+      </div>
+
+      {/* Category filter row */}
+      <div className="spawn-cat-filters spawn-cat-row">
+        {SPAWN_CATEGORIES.map((cat) => (
+          <button
+            key={cat}
+            className={`spawn-cat-pill${activeCategories.has(cat) ? ' active' : ''}`}
+            onClick={() => toggleCategory(cat)}
+          >
+            {cat}
+          </button>
+        ))}
+        {activeCategories.size > 0 && (
+          <button className="spawn-cat-pill spawn-cat-clear" onClick={() => setActiveCategories(new Set())}>
+            Clear
+          </button>
+        )}
       </div>
 
       {/* Table */}
