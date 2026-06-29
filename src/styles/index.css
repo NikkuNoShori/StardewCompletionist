@@ -1609,8 +1609,22 @@ h1 {
 .spawn-th-cat { }
 
 .spawn-id code {
-  background: var(--wood-dark); color: var(--gold); padding: 2px 6px;
+  color: var(--wood-darker); padding: 2px 6px;
   border-radius: 4px; font-size: .82rem; font-family: 'VT323', monospace;
+  font-weight: 700;
+}
+/* Click the [id] itself to copy */
+.spawn-code-copy {
+  background: none; border: none; padding: 0; cursor: pointer;
+  font: inherit; line-height: 1;
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 3.5em;
+}
+.spawn-code-copy code { transition: color .15s; }
+.spawn-code-copy:hover code { color: var(--gold); }
+.spawn-code-check {
+  color: var(--green-check-dark); font-weight: 800;
+  font-size: 1.05rem; line-height: 1;
 }
 .spawn-name { font-weight: 700; color: var(--wood-darker); }
 .spawn-cat { font-size: .75rem; color: var(--text-muted); }

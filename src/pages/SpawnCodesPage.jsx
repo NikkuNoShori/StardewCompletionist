@@ -94,6 +94,8 @@ function HowToUse() {
           <p><b>Method 2 — Character Naming:</b> Name your character <code>[ID]</code> at game start. Talk to Gus at the Saloon — he says your name and you receive the item.</p>
           <p><b>Combine up to 3 codes:</b> <code>[74][72][166]</code> gives Prismatic Shard + Diamond + Treasure Chest in one name.</p>
           <p><b>Works on all platforms</b> — PC, Switch, PS, Xbox, Mobile. No mods needed.</p>
+          <p><b>Copy a code:</b> Click the <code>[ID]</code> itself (or the copy icon at the end of the row) to copy it to your clipboard — it briefly shows a ✓ to confirm.</p>
+          <p><b>Help verify codes:</b> Use 👍 to confirm a code gave you the right item, or 👎 to flag one that gave the wrong item. Your votes are saved and collected into the <b>Confirmed</b> and <b>Reported</b> tabs so bad codes can be fixed.</p>
           <p className="spawn-howto-note"><b>Note:</b> 1.6 introduced string-based IDs for some new items. Numeric IDs still work for all pre-1.6 items listed here.</p>
         </div>
       )}
@@ -121,6 +123,34 @@ function CopyButton({ id }) {
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
         </svg>
+      )}
+    </button>
+  );
+}
+
+// ─── Copyable Code (click the [id] itself to copy) ───
+function CopyableCode({ id }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = useCallback((e) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(`[${id}]`).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, [id]);
+
+  return (
+    <button
+      type="button"
+      className={`spawn-code-copy${copied ? ' spawn-code-copied' : ''}`}
+      onClick={handleCopy}
+      title={`Copy [${id}]`}
+    >
+      {copied ? (
+        <span className="spawn-code-check" aria-label="Copied">✓</span>
+      ) : (
+        <code>[{id}]</code>
       )}
     </button>
   );
@@ -248,6 +278,8 @@ export default function SpawnCodesPage() {
     );
     let items = SPAWN_CODES.filter((item) => {
       if (filter === 'favorites' && !favorites.has(item.id)) return false;
+      if (filter === 'confirmed' && votes[String(item.id)] !== 1) return false;
+      if (filter === 'reported' && votes[String(item.id)] !== -1) return false;
       if (activeCategories.size > 0 && !activeCategories.has(item.category)) return false;
       if (q) {
         const idMatch = String(item.id).includes(q);
@@ -282,7 +314,17 @@ export default function SpawnCodesPage() {
       items.reverse();
     }
     return items;
-  }, [search, sortState, activeCategories, filter, favorites, selection, priceFilterMode]);
+  }, [search, sortState, activeCategories, filter, favorites, votes, selection, priceFilterMode]);
+
+  const voteCounts = useMemo(() => {
+    let up = 0;
+    let down = 0;
+    for (const v of Object.values(votes)) {
+      if (v === 1) up += 1;
+      else if (v === -1) down += 1;
+    }
+    return { up, down };
+  }, [votes]);
 
   if (!acknowledged) {
     return (
@@ -319,6 +361,18 @@ export default function SpawnCodesPage() {
             onClick={() => setFilter('favorites')}
           >
             Favorites ({favorites.size})
+          </button>
+          <button
+            className={`filter-btn${filter === 'confirmed' ? ' active' : ''}`}
+            onClick={() => setFilter('confirmed')}
+          >
+            Confirmed ({voteCounts.up})
+          </button>
+          <button
+            className={`filter-btn${filter === 'reported' ? ' active' : ''}`}
+            onClick={() => setFilter('reported')}
+          >
+            Reported ({voteCounts.down})
           </button>
         </div>
         <div className="search-wrap">
@@ -423,7 +477,7 @@ export default function SpawnCodesPage() {
                 <tr key={item.id} className={`spawn-row${favorites.has(item.id) ? ' spawn-row-fav' : ''}`}>
                   <td><FavButton id={item.id} favorites={favorites} toggleFavorite={toggleFavorite} /></td>
                   <td className="spawn-id">
-                    <code>[{item.id}]</code>
+                    <CopyableCode id={item.id} />
                   </td>
                   <td className="spawn-name">{item.name}</td>
                   <td className="spawn-cat">{item.category}</td>
@@ -464,7 +518,7 @@ export default function SpawnCodesPage() {
                     </span>
                   </div>
                   <div className="cc-item-meta">
-                    <span className="spawn-id"><code>[{item.id}]</code></span>
+                    <span className="spawn-id"><CopyableCode id={item.id} /></span>
                     <span className="spawn-cat">{item.category}</span>
                     <PriceWithTooltip
                       value={item.price}
@@ -483,7 +537,17 @@ export default function SpawnCodesPage() {
             ))}
           </div>
         )}
-        {filtered.length === 0 && <div className="empty">{filter === 'favorites' ? 'No favorites yet — star some items!' : 'No items match your search'}</div>}
+        {filtered.length === 0 && (
+          <div className="empty">
+            {filter === 'favorites'
+              ? 'No favorites yet — star some items!'
+              : filter === 'confirmed'
+                ? 'No confirmed codes yet — give a 👍 to codes you’ve verified work!'
+                : filter === 'reported'
+                  ? 'No reported codes — 👎 any code that gives the wrong item.'
+                  : 'No items match your search'}
+          </div>
+        )}
         <div className="spawn-count">{filtered.length} items shown</div>
       </div>
     </div>
