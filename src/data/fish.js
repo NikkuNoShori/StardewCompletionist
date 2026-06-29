@@ -37,6 +37,10 @@ export const FISH = [
   { name: "Perch", location: "River", season: ["Winter"], time: "Any", weather: "Any", difficulty: 35, price: 55, category: "Regular" },
   { name: "Chub", location: "River/Mountain Lake", season: ["Any"], time: "Any", weather: "Any", difficulty: 35, price: 50, category: "Regular" },
   { name: "Goby", location: "Forest River", season: ["Any"], time: "Any", weather: "Any", difficulty: 50, price: 150, category: "Regular" },
+  { name: "Anchovy", location: "Ocean", season: ["Spring", "Fall"], time: "Any", weather: "Any", difficulty: 30, price: 30, category: "Regular" },
+  { name: "Herring", location: "Ocean", season: ["Spring", "Winter"], time: "Any", weather: "Any", difficulty: 25, price: 30, category: "Regular" },
+  { name: "Slimejack", location: "Mutant Bug Lair", season: ["Any"], time: "Any", weather: "Any", difficulty: 55, price: 100, category: "Regular" },
+  { name: "Void Salmon", location: "Witch's Swamp", season: ["Any"], time: "Any", weather: "Any", difficulty: 80, price: 150, category: "Regular" },
 
   // ============ MINES FISH ============
   { name: "Ghostfish", location: "Mines (Floor 20/60)", season: ["Any"], time: "Any", weather: "Any", difficulty: 50, price: 45, category: "Mines" },
