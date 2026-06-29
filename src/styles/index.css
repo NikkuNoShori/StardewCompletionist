@@ -1566,6 +1566,15 @@ h1 {
 
 /* Spawn table */
 .spawn-panel { max-height: 65vh; }
+/* Spawn Codes page: wider + larger text for readability */
+.spawn-page { max-width: 1400px; }
+.spawn-page .spawn-table { font-size: .98rem; }
+.spawn-page .spawn-table th { font-size: 1.15rem; }
+.spawn-page .spawn-table td { padding: 9px 12px; }
+.spawn-page .spawn-id code { font-size: .95rem; }
+.spawn-page .spawn-cat { font-size: .88rem; }
+.spawn-page .spawn-rarity { font-size: .85rem; }
+
 .spawn-table { width: 100%; border-collapse: collapse; font-size: .84rem; }
 .spawn-table th {
   background: var(--wood-dark); color: var(--gold);
@@ -1643,6 +1652,25 @@ h1 {
 .spawn-fav-btn:hover { color: var(--gold); }
 .spawn-fav-active { color: var(--gold); text-shadow: 0 0 4px rgba(249, 168, 37, .4); }
 .spawn-row-fav { background: rgba(249, 168, 37, .04); }
+
+/* Vote buttons (thumbs up / down) */
+.spawn-vote-btns { display: inline-flex; gap: 4px; align-items: center; }
+.spawn-vote-btn {
+  background: none; border: 1.5px solid var(--parchment-dark);
+  border-radius: 6px; padding: 3px 6px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted); transition: all .15s;
+}
+.spawn-vote-btn:hover { border-color: var(--wood); color: var(--wood-darker); }
+.spawn-vote-up-active {
+  color: var(--green-check-dark); border-color: var(--green-check);
+  background: var(--green-check-bg, rgba(76, 175, 80, .12));
+}
+.spawn-vote-down-active {
+  color: var(--red-danger); border-color: var(--red-danger);
+  background: rgba(229, 57, 53, .1);
+}
+.spawn-th-vote { width: 84px; text-align: center; }
 
 /* Item icons */
 .spawn-icon-cell { text-align: center; }

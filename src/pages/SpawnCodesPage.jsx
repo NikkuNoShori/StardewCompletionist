@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback } from 'react';
 import { SPAWN_CODES, SPAWN_CATEGORIES } from '../data/spawnCodes';
 import { useProfession } from '../context/ProfessionContext';
 import { useCollectionStore } from '../hooks/useCollectionStore';
+import { useSpawnVotes } from '../hooks/useSpawnVotes';
 import {
   createProfessionPricePredicate,
   getPriceDisplay,
@@ -125,6 +126,39 @@ function CopyButton({ id }) {
   );
 }
 
+// ─── Vote Buttons (thumbs up / down) ───
+function VoteButtons({ id, name, votes, castVote }) {
+  const vote = votes[String(id)];
+  return (
+    <div className="spawn-vote-btns">
+      <button
+        type="button"
+        className={`spawn-vote-btn${vote === 1 ? ' spawn-vote-up-active' : ''}`}
+        onClick={(e) => { e.stopPropagation(); castVote(id, name, 1); }}
+        title="This code is correct"
+        aria-pressed={vote === 1}
+        aria-label="Mark code correct"
+      >
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
+        </svg>
+      </button>
+      <button
+        type="button"
+        className={`spawn-vote-btn${vote === -1 ? ' spawn-vote-down-active' : ''}`}
+        onClick={(e) => { e.stopPropagation(); castVote(id, name, -1); }}
+        title="This code gives the wrong item"
+        aria-pressed={vote === -1}
+        aria-label="Report wrong item"
+      >
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17" />
+        </svg>
+      </button>
+    </div>
+  );
+}
+
 // ─── Favorite Star Button ───
 function FavButton({ id, favorites, toggleFavorite }) {
   const isFav = favorites.has(id);
@@ -158,6 +192,7 @@ export default function SpawnCodesPage() {
     } catch { return new Set(); }
   });
   const { selection, priceFilterMode } = useProfession();
+  const { votes, castVote } = useSpawnVotes();
   const viewModes = useCollectionStore((s) => s.viewModes);
   const setViewMode = useCollectionStore((s) => s.setViewMode);
   const viewMode = viewModes['spawn-codes'] || 'table';
@@ -262,7 +297,7 @@ export default function SpawnCodesPage() {
   }
 
   return (
-    <div className="container">
+    <div className="container spawn-page">
       <header className="header">
         <h1>Spawn Codes</h1>
         <p className="subtitle">{SPAWN_CODES.length} items — searchable reference</p>
@@ -379,6 +414,7 @@ export default function SpawnCodesPage() {
                     Price{sortArrow('price')}
                   </button>
                 </th>
+                <th className="spawn-th-vote">Verify</th>
                 <th className="spawn-th-copy"></th>
               </tr>
             </thead>
@@ -407,6 +443,7 @@ export default function SpawnCodesPage() {
                       className="spawn-price"
                     />
                   </td>
+                  <td><VoteButtons id={item.id} name={item.name} votes={votes} castVote={castVote} /></td>
                   <td><CopyButton id={item.id} /></td>
                 </tr>
               ))}
@@ -438,6 +475,7 @@ export default function SpawnCodesPage() {
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                  <VoteButtons id={item.id} name={item.name} votes={votes} castVote={castVote} />
                   <FavButton id={item.id} favorites={favorites} toggleFavorite={toggleFavorite} />
                   <CopyButton id={item.id} />
                 </div>
