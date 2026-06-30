@@ -12,7 +12,7 @@ export function Checkmark() {
 }
 
 // Collapsible section header
-export function SectionHeader({ sectionKey, label, done, total, defaultOpen = true }) {
+export function SectionHeader({ sectionKey, label, anchorLabel, done, total, defaultOpen = true }) {
   const collapsed = useCollectionStore((s) => s.collapsedSections);
   const toggleSection = useCollectionStore((s) => s.toggleSection);
   const ensureSectionState = useCollectionStore((s) => s.ensureSectionState);
@@ -24,7 +24,7 @@ export function SectionHeader({ sectionKey, label, done, total, defaultOpen = tr
 
   return (
     <div
-      id={sectionId(label)}
+      id={sectionId(anchorLabel ?? label)}
       className="cc-bundle-hdr cc-section-anchor"
       onClick={() => toggleSection(sectionKey)}
       role="button"

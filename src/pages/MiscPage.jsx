@@ -136,6 +136,7 @@ export default function MiscPage() {
               <SectionHeader
                 sectionKey={`misc:${group}`}
                 label={group === 'Stardrops' ? `Stardrops — +${Object.keys(stardropChecked).length * 34} bonus energy` : group}
+                anchorLabel={group}
                 done={groupDone}
                 total={items.length}
                 defaultOpen={true}
