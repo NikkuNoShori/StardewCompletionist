@@ -18,6 +18,7 @@ export const useCollectionStore = create(
       journalScrapChecked: {},
       fieldOfficeChecked: {},
       monsterChecked: {},
+      catalogChecked: {},
 
       // UI state
       collapsedSections: {},
@@ -92,7 +93,7 @@ export const useCollectionStore = create(
           'recipeChecked', 'ingredientsChecked', 'bundleChecked',
           'fishChecked', 'museumChecked', 'shippingChecked', 'craftingChecked',
           'walnutChecked', 'stardropChecked', 'secretNoteChecked', 'journalScrapChecked',
-          'fieldOfficeChecked', 'monsterChecked',
+          'fieldOfficeChecked', 'monsterChecked', 'catalogChecked',
         ];
         keys.forEach((k) => {
           if (data[k] && Object.keys(data[k]).length > 0) update[k] = data[k];
@@ -116,6 +117,7 @@ export const useCollectionStore = create(
           journalScrapChecked: s.journalScrapChecked,
           fieldOfficeChecked: s.fieldOfficeChecked,
           monsterChecked: s.monsterChecked,
+          catalogChecked: s.catalogChecked,
         };
       },
     }),
@@ -135,6 +137,7 @@ export const useCollectionStore = create(
         journalScrapChecked: state.journalScrapChecked,
         fieldOfficeChecked: state.fieldOfficeChecked,
         monsterChecked: state.monsterChecked,
+        catalogChecked: state.catalogChecked,
         collapsedSections: state.collapsedSections,
         searchQueries: state.searchQueries,
         filters: state.filters,

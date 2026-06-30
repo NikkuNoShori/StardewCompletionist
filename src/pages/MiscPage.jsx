@@ -4,6 +4,7 @@ import { useCollectionSync } from '../hooks/useCollectionSync';
 import { STARDROPS } from '../data/stardrops';
 import { SECRET_NOTES, JOURNAL_SCRAPS } from '../data/secretNotes';
 import { MONSTER_GOALS } from '../data/monsters';
+import { CATALOGS } from '../data/catalogs';
 import { CollectionHeader, CollectionControls, SectionHeader, CollectionItem, Checkmark } from '../components/CollectionPage';
 
 const SORT_OPTIONS = [
@@ -31,9 +32,13 @@ const ALL_MISC_ITEMS = [
     meta: `${g.monsters} — ${g.location}`, detail: `Reward: ${g.reward} — ${g.tip}`,
     extra: <span className="cc-item-qty">Kill {g.target}</span>,
   })),
+  ...CATALOGS.map((c) => ({
+    id: c.id, name: c.name, category: 'Catalogs', storeKey: 'catalogChecked',
+    meta: c.source, detail: null, extra: null,
+  })),
 ];
 
-const CATEGORY_ORDER = ['Stardrops', 'Secret Notes', 'Journal Scraps', 'Monster Goals'];
+const CATEGORY_ORDER = ['Stardrops', 'Secret Notes', 'Journal Scraps', 'Monster Goals', 'Catalogs'];
 
 function isItemChecked(item, store) {
   return !!store[item.storeKey]?.[item.id];
@@ -45,6 +50,7 @@ export default function MiscPage() {
   const secretNoteChecked = useCollectionStore((s) => s.secretNoteChecked);
   const journalScrapChecked = useCollectionStore((s) => s.journalScrapChecked);
   const monsterChecked = useCollectionStore((s) => s.monsterChecked);
+  const catalogChecked = useCollectionStore((s) => s.catalogChecked);
   const toggleItem = useCollectionStore((s) => s.toggleItem);
   const searchQueries = useCollectionStore((s) => s.searchQueries);
   const filters = useCollectionStore((s) => s.filters);
@@ -52,13 +58,14 @@ export default function MiscPage() {
   const viewModes = useCollectionStore((s) => s.viewModes);
   const setSort = useCollectionStore((s) => s.setSort);
 
-  const checkedMaps = { stardropChecked, secretNoteChecked, journalScrapChecked, monsterChecked };
+  const checkedMaps = { stardropChecked, secretNoteChecked, journalScrapChecked, monsterChecked, catalogChecked };
 
   const totalDone =
     Object.keys(stardropChecked).length +
     Object.keys(secretNoteChecked).length +
     Object.keys(journalScrapChecked).length +
-    Object.keys(monsterChecked).length;
+    Object.keys(monsterChecked).length +
+    Object.keys(catalogChecked).length;
   const totalItems = ALL_MISC_ITEMS.length;
 
   const query = (searchQueries['misc'] || '').toLowerCase().trim();
@@ -74,7 +81,7 @@ export default function MiscPage() {
       if (query && !`${item.name} ${item.meta || ''} ${item.category}`.toLowerCase().includes(query)) return false;
       return true;
     });
-  }, [query, filter, stardropChecked, secretNoteChecked, journalScrapChecked, monsterChecked]);
+  }, [query, filter, stardropChecked, secretNoteChecked, journalScrapChecked, monsterChecked, catalogChecked]);
 
   const grouped = useMemo(() => {
     if (sort === 'alpha' || sort === 'alpha_desc') {
@@ -103,6 +110,7 @@ export default function MiscPage() {
     if (sort === activeDescMode) return ' \u2193';
     return ' \u21D5';
   }, [sort]);
+
 
   return (
     <div className="container">
