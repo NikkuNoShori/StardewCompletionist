@@ -7,6 +7,7 @@ import {
   CollectionHeader, CollectionControls, SectionHeader,
   CollectionItem, Checkmark,
 } from '../components/CollectionPage';
+import SectionTOC, { sectionId } from '../components/SectionTOC';
 
 const SORT_OPTIONS = [
   { value: 'area', label: 'By Area' },
@@ -30,7 +31,8 @@ function CategoryHeader({ label, done, total, sectionKey }) {
 
   return (
     <div
-      className="island-category-hdr"
+      id={sectionId(label)}
+      className="island-category-hdr cc-section-anchor"
       onClick={() => toggleSection(sectionKey)}
       role="button"
       tabIndex={0}
@@ -184,8 +186,14 @@ export default function IslandPage() {
     return ' \u21D5';
   }, [sort]);
 
+  const tocSections = [
+    filteredWalnuts.length > 0 && { id: sectionId('Golden Walnuts'), label: 'Golden Walnuts' },
+    filteredFO.length > 0 && { id: sectionId('Field Office'), label: 'Field Office' },
+  ].filter(Boolean);
+
   return (
     <div className="container">
+      <SectionTOC sections={tocSections} />
       <CollectionHeader
         title="Ginger Island"
         done={walnutDone + foDone}

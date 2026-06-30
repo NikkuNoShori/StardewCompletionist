@@ -12,6 +12,7 @@ import {
   CollectionHeader, CollectionControls, SectionHeader,
   Checkmark, useFilteredItems,
 } from '../components/CollectionPage';
+import SectionTOC, { sectionId } from '../components/SectionTOC';
 
 const SORT_OPTIONS = [
   { value: 'alpha', label: 'A-Z' },
@@ -151,8 +152,11 @@ export default function FishPage() {
     return ' \u21D5';
   }, [sort]);
 
+  const tocSections = grouped.map(([group]) => ({ id: sectionId(group), label: group }));
+
   return (
     <div className="container">
+      <SectionTOC sections={tocSections} />
       <CollectionHeader title="Fish Collection" done={done} total={total} colorClass="fish-progress" />
       <CollectionControls
         page="fish"

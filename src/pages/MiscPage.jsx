@@ -6,6 +6,7 @@ import { SECRET_NOTES, JOURNAL_SCRAPS } from '../data/secretNotes';
 import { MONSTER_GOALS } from '../data/monsters';
 import { CATALOGS } from '../data/catalogs';
 import { CollectionHeader, CollectionControls, SectionHeader, CollectionItem, Checkmark } from '../components/CollectionPage';
+import SectionTOC, { sectionId } from '../components/SectionTOC';
 
 const SORT_OPTIONS = [
   { value: 'category', label: 'By Category' },
@@ -111,9 +112,11 @@ export default function MiscPage() {
     return ' \u21D5';
   }, [sort]);
 
+  const tocSections = grouped.map(([group]) => ({ id: sectionId(group), label: group }));
 
   return (
     <div className="container">
+      <SectionTOC sections={tocSections} />
       <CollectionHeader title="Misc Trackers" done={totalDone} total={totalItems} colorClass="misc-progress" icon="⭐" />
       <CollectionControls
         page="misc"

@@ -12,6 +12,7 @@ import {
   CollectionHeader, CollectionControls, SectionHeader,
   CollectionItem, Checkmark, useFilteredItems,
 } from '../components/CollectionPage';
+import SectionTOC, { sectionId } from '../components/SectionTOC';
 
 const SORT_OPTIONS = [
   { value: 'type', label: 'By Type' },
@@ -101,8 +102,11 @@ export default function MuseumPage() {
     return ' \u21D5';
   }, [sort]);
 
+  const tocSections = grouped.map(([group]) => ({ id: sectionId(group), label: group }));
+
   return (
     <div className="container">
+      <SectionTOC sections={tocSections} />
       <CollectionHeader title="Museum Collection" done={done} total={total} colorClass="museum-progress" icon="🏛️" />
       <CollectionControls
         page="museum"

@@ -1,5 +1,6 @@
 import { useMemo, useEffect } from 'react';
 import { useCollectionStore } from '../hooks/useCollectionStore';
+import { sectionId } from './SectionTOC';
 
 // Shared checkbox SVG
 export function Checkmark() {
@@ -23,7 +24,8 @@ export function SectionHeader({ sectionKey, label, done, total, defaultOpen = tr
 
   return (
     <div
-      className="cc-bundle-hdr"
+      id={sectionId(label)}
+      className="cc-bundle-hdr cc-section-anchor"
       onClick={() => toggleSection(sectionKey)}
       role="button"
       tabIndex={0}

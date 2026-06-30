@@ -6,6 +6,7 @@ import {
   CollectionHeader, CollectionControls, SectionHeader,
   CollectionItem, Checkmark, useFilteredItems,
 } from '../components/CollectionPage';
+import SectionTOC, { sectionId } from '../components/SectionTOC';
 
 const SORT_OPTIONS = [
   { value: 'category', label: 'By Category' },
@@ -87,8 +88,11 @@ export default function ShippingPage() {
     return ' \u21D5';
   }, [sort]);
 
+  const tocSections = grouped.map(([group]) => ({ id: sectionId(group), label: group }));
+
   return (
     <div className="container">
+      <SectionTOC sections={tocSections} />
       <CollectionHeader title="Shipping Collection" done={done} total={total} colorClass="shipping-progress" icon="📦" />
       <CollectionControls
         page="shipping"
