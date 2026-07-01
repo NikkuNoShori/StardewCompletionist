@@ -1,7 +1,7 @@
 # Stardew Completionist — Data Model
 
-**Last reviewed:** 2026-04-06
-**Last updated:** 2026-04-06 (initial creation — documents unified collection_progress table and all static data files)
+**Last reviewed:** 2026-06-30
+**Last updated:** 2026-06-30 (added catalog_checked column, spawn_votes table, and catalogs.js data file)
 
 ---
 
@@ -9,7 +9,7 @@
 
 ### Table: `collection_progress`
 
-Single table storing all user progress. One row per user with 13 JSONB columns (one per tracker). Created across migrations `20260406180003` and `20260406180004`.
+Single table storing all user progress. One row per user with 14 JSONB columns (one per tracker). Created across migrations `20260406180003` and `20260406180004`; `catalog_checked` added in `20260406180006`.
 
 ```sql
 CREATE TABLE public.collection_progress (
@@ -27,6 +27,7 @@ CREATE TABLE public.collection_progress (
   journal_scrap_checked JSONB NOT NULL DEFAULT '{}',
   field_office_checked  JSONB NOT NULL DEFAULT '{}',
   monster_checked       JSONB NOT NULL DEFAULT '{}',
+  catalog_checked       JSONB NOT NULL DEFAULT '{}',
   updated_at            TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 ```
@@ -83,6 +84,31 @@ Upserts all 13 checked maps from a single JSONB parameter. Uses `INSERT ... ON C
 - Language: PL/pgSQL, `SECURITY DEFINER`
 - Auth: Uses `auth.uid()` — requires authenticated session
 
+### Table: `spawn_votes`
+
+Crowd feedback on spawn codes — users vote a code correct (`1`) or wrong (`-1`). One row per user per item. Reviewed by the dev (aggregate read bypasses RLS via service role).
+
+```sql
+CREATE TABLE public.spawn_votes (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id    UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  item_id    TEXT NOT NULL,
+  item_name  TEXT NOT NULL,
+  vote       SMALLINT NOT NULL CHECK (vote IN (1, -1)),
+  note       TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+-- UNIQUE (user_id, item_id)
+```
+
+RLS: `insert_own` / `update_own` / `select_own` / `delete_own`, all keyed on `auth.uid() = user_id`.
+
+RPCs (all `SECURITY DEFINER`):
+- `vote_spawn_code(p_item_id TEXT, p_item_name TEXT, p_vote SMALLINT, p_note TEXT) → void` — upsert the caller's vote.
+- `clear_spawn_vote(p_item_id TEXT) → void` — remove the caller's vote.
+- `get_my_spawn_votes() → JSONB` — `{ item_id: vote }` for the caller.
+
 ### Migration History
 
 | Migration | Description |
@@ -95,8 +121,10 @@ Upserts all 13 checked maps from a single JSONB parameter. Uses `INSERT ... ON C
 | `20260406180002_create_bundle_progress_table.sql` | Created `bundle_progress` table (now dropped) |
 | `20260406180003_create_collection_progress_table.sql` | Created `collection_progress` with 10 tracker columns |
 | `20260406180004_unify_progress_tables.sql` | Added recipe/bundle columns, migrated data, dropped old tables and RPCs |
+| `20260406180005_create_spawn_votes_table.sql` | Created `spawn_votes` table + vote/clear/get RPCs |
+| `20260406180006_add_catalog_checked_column.sql` | Added `catalog_checked` column; updated get/save RPCs |
 
-> **Current state:** Only `collection_progress` exists. All prior tables (`recipe_progress`, `bundle_progress`, `recipes`) were migrated and dropped in `20260406180004`.
+> **Current state:** `collection_progress` and `spawn_votes` exist. All prior progress tables (`recipe_progress`, `bundle_progress`, `recipes`) were migrated and dropped in `20260406180004`.
 
 ---
 
@@ -276,6 +304,19 @@ Export: `MONSTER_GOALS` (array)
   location: "Mines (all floors), Secret Woods, Skull Cavern",
   reward: "Slime Charmer Ring",
   tip: "Slimes are everywhere — focus on Mines floors 1-40..."
+}
+```
+
+### `catalogs.js` — Furniture/Wallpaper Catalogs (7 total)
+
+Export: `CATALOGS` (array). Tracked via `catalog_checked` on the Misc page.
+
+```js
+{
+  id: "catalogue",                 // stable key used in catalog_checked
+  name: "Catalogue",
+  price: 30000,                    // 0 for the Trash Catalogue (found, not bought)
+  source: "Pierre's General Store — 30,000g"
 }
 ```
 

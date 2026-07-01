@@ -4,6 +4,15 @@ All notable user-visible changes to Stardew Completionist.
 
 ---
 
+## 2026-06-30 (Quick wins: auth, fish, spawn codes, catalogs, section menu) — quick-wins
+
+- **Auth modal:** Password show/hide toggle and a Confirm Password field with match validation on sign-up.
+- **Fishing data:** Added 4 missing fish — Anchovy, Herring, Slimejack, Void Salmon (verified against the wiki).
+- **Spawn Codes layout:** Category filters moved to their own wrapping row (no more horizontal scrollbar); wider page and larger table text; click the `[id]` itself to copy (centered green checkmark feedback).
+- **Spawn code voting:** Thumbs up/down on each code so users can confirm correct codes or flag wrong ones. Votes filter into new Confirmed / Reported tabs. Stored locally when logged out, synced to the new `spawn_votes` Supabase table on login.
+- **Catalogs tracker:** New Catalogs section on the Misc page (7 catalogs) with its own `catalog_checked` progress column.
+- **Section table-of-contents:** Floating, scroll-aware section menu on the six collection pages (Misc, Fish, Crafting, Island, Museum, Shipping) that highlights the active section as you scroll and jumps to a section on click.
+
 ## 2026-04-06 (Unified progress & collection expansion) — enhancements/additional-lists
 
 - **Unified progress tracking:** Merged recipe, bundle, and collection progress into a single `collection_progress` Supabase table with 13 JSONB columns. Old `recipe_progress`, `bundle_progress`, and `recipes` tables dropped after data migration.
