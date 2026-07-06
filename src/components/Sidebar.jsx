@@ -29,6 +29,7 @@ const NAV_ITEMS = [
   { key: '/misc', label: 'Misc' },
   { key: '/museum', label: 'Museum' },
   { key: '/shipping', label: 'Shipping' },
+  { key: '/villagers', label: 'Villagers' },
   { key: '/spawn-codes', label: 'Spawn Codes', cheat: true },
 ];
 

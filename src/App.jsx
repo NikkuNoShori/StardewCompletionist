@@ -13,6 +13,7 @@ import ShippingPage from './pages/ShippingPage';
 import CraftingPage from './pages/CraftingPage';
 import IslandPage from './pages/IslandPage';
 import MiscPage from './pages/MiscPage';
+import VillagersPage from './pages/VillagersPage';
 import SpawnCodesPage from './pages/SpawnCodesPage';
 
 function Layout() {
@@ -44,6 +45,7 @@ function Layout() {
           <Route path="/crafting" element={<CraftingPage />} />
           <Route path="/island" element={<IslandPage />} />
           <Route path="/misc" element={<MiscPage />} />
+          <Route path="/villagers" element={<VillagersPage />} />
           <Route path="/spawn-codes" element={<SpawnCodesPage />} />
         </Routes>
       </main>
