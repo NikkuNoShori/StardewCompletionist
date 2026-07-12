@@ -75,6 +75,8 @@ export const MINERALS = [
   { name: "Marble", source: "Regular Geode", price: 110, category: "Mineral", subCategory: "Geode" },
   { name: "Slate", source: "Regular Geode", price: 85, category: "Mineral", subCategory: "Geode" },
   { name: "Fairy Stone", source: "Regular Geode", price: 250, category: "Mineral", subCategory: "Geode" },
+  { name: "Alamite", source: "Regular Geode", price: 150, category: "Mineral", subCategory: "Geode" },
+  { name: "Jamborite", source: "Regular Geode", price: 150, category: "Mineral", subCategory: "Geode" },
 
   // Frozen Geode Minerals
   { name: "Tigerseye", source: "Frozen Geode", price: 275, category: "Mineral", subCategory: "Frozen Geode" },
@@ -86,6 +88,7 @@ export const MINERALS = [
   { name: "Geminite", source: "Frozen Geode", price: 150, category: "Mineral", subCategory: "Frozen Geode" },
   { name: "Ghost Crystal", source: "Frozen Geode", price: 200, category: "Mineral", subCategory: "Frozen Geode" },
   { name: "Soapstone", source: "Frozen Geode", price: 120, category: "Mineral", subCategory: "Frozen Geode" },
+  { name: "Esperite", source: "Frozen Geode", price: 100, category: "Mineral", subCategory: "Frozen Geode" },
 
   // Magma Geode Minerals
   { name: "Obsidian", source: "Magma Geode", price: 200, category: "Mineral", subCategory: "Magma Geode" },
@@ -105,18 +108,18 @@ export const MINERALS = [
 
 export const MUSEUM_REWARDS = [
   { count: 5, reward: "Cauliflower Seeds (9)" },
-  { count: 10, reward: "Starfruit Seed" },
-  { count: 15, reward: "1,000g" },
-  { count: 20, reward: "Rusty Key (Sewers access)" },
-  { count: 25, reward: "Ancient Seeds recipe + Ancient Seeds" },
-  { count: 30, reward: "Lupini Painting" },
-  { count: 35, reward: "Rarecrow #8" },
-  { count: 40, reward: "Skeleton Key" },
-  { count: 50, reward: "Bear's Knowledge (berries sell 3x)" },
-  { count: 60, reward: "Dwarf Sword" },
-  { count: 70, reward: "Rusty Sword" },
-  { count: 80, reward: "Golden Pumpkin" },
-  { count: 90, reward: "Rarecrow #7" },
+  { count: 10, reward: "Melon Seeds (9)" },
+  { count: 15, reward: "Starfruit Seeds (1)" },
+  { count: 20, reward: "'A Night On Eco-Hill' Painting" },
+  { count: 25, reward: "'Jade Hills' Painting" },
+  { count: 30, reward: "Lg. Futan Bear" },
+  { count: 35, reward: "Pumpkin Seeds (9)" },
+  { count: 40, reward: "Rarecrow #8 (+ Treasure Trove achievement)" },
+  { count: 50, reward: "Bear Statue" },
+  { count: 60, reward: "Rusty Key (Sewers access; delivered next day)" },
+  { count: 70, reward: "Triple Shot Espresso (3)" },
+  { count: 80, reward: "Warp Totem: Farm (5)" },
+  { count: 90, reward: "Magic Rock Candy" },
   { count: 95, reward: "Stardrop + A Complete Collection achievement" },
 ];
 
