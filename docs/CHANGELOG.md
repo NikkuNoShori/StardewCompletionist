@@ -4,6 +4,13 @@ All notable user-visible changes to Stardew Completionist.
 
 ---
 
+## 2026-07-19 (Villagers, museum & walnut data fixes) — quick-wins
+
+- **Villagers page:** New tracker for all 34 giftable villagers with birthdays and loved/liked gift preferences, plus per-villager birthday-gift checkboxes. Synced via the `birthday_checked` progress column.
+- **Cloud sync fix:** Catalog and Villagers (birthday) progress now persist to Supabase — they were previously missing from the debounced save trigger, so those checkboxes didn't sync for logged-in users.
+- **Museum data:** Added 3 missing minerals — Alamite, Jamborite, Esperite — bringing the museum to the correct 95 items (42 artifacts + 53 minerals). Corrected the donation reward tiers to match the wiki.
+- **Golden Walnuts:** Completed the Ginger Island walnut list to the full 130 (was 112), verified against the wiki. Locations regrouped into accurate areas, including a new Island East section.
+
 ## 2026-06-30 (Quick wins: auth, fish, spawn codes, catalogs, section menu) — quick-wins
 
 - **Auth modal:** Password show/hide toggle and a Confirm Password field with match validation on sign-up.
