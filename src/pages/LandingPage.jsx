@@ -29,6 +29,7 @@ const FEATURES = [
   { icon: '🔎', title: 'Misc', desc: 'Track miscellaneous completion goals and achievements.', path: '/misc' },
   { icon: '🏺', title: 'Museum', desc: 'Keep tabs on minerals and artifacts for Gunther.', path: '/museum' },
   { icon: '📤', title: 'Shipping', desc: 'Track every item shipped toward full completion.', path: '/shipping' },
+  { icon: '💝', title: 'Villagers', desc: 'Track villager birthdays and their favorite gifts.', path: '/villagers' },
   { icon: '🔒', title: 'Spawn Codes', desc: 'Cheat / Spoiler', path: '/spawn-codes', cheat: true },
 ];
 
