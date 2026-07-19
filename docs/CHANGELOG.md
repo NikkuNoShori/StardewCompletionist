@@ -4,6 +4,11 @@ All notable user-visible changes to Stardew Completionist.
 
 ---
 
+## 2026-07-19 (Skill-level tracking) — quick-wins
+
+- **Skills tracker:** The top-right character panel is now tabbed — a new **Skills** tab lets you set each skill's level (0–10) alongside the existing **Professions** tab. Skill levels sync to Supabase (new `skill_levels` column) and will feed the planned Perfection tracker's Farmer Level line.
+- **Roadmap:** Documented upcoming work in `docs/ROADMAP.md` — Perfection dashboard, Wizard Obelisks + Golden Clock, and an "Import from Save File" auto-fill feature.
+
 ## 2026-07-19 (Villagers, museum & walnut data fixes) — quick-wins
 
 - **Villagers page:** New tracker for all 34 giftable villagers with birthdays and loved/liked gift preferences, plus per-villager birthday-gift checkboxes. Synced via the `birthday_checked` progress column.

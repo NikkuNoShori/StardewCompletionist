@@ -1599,6 +1599,44 @@ h1 {
   cursor: pointer;
 }
 .profession-popout-body { padding: 10px; max-height: 68vh; overflow-y: auto; }
+.profession-tabs {
+  display: flex;
+  border-bottom: 2px solid var(--wood);
+  background: var(--parchment-dark);
+}
+.profession-tab {
+  flex: 1;
+  font-family: 'VT323', monospace;
+  font-size: 1rem;
+  padding: 7px 10px;
+  border: none;
+  background: transparent;
+  color: var(--wood-dark);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+}
+.profession-tab.active {
+  background: var(--parchment);
+  border-bottom-color: var(--gold);
+  font-weight: 700;
+}
+.skill-level-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.skill-level-row select { min-width: 92px; }
+.skill-level-maxed {
+  border-color: var(--gold);
+  font-weight: 700;
+}
+.prof-hint {
+  margin: 4px 2px 0;
+  font-size: .75rem;
+  color: var(--wood-dark);
+  opacity: .8;
+}
 .prof-skill {
   border: 1px solid var(--parchment-dark);
   border-radius: 8px;

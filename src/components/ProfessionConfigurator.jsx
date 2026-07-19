@@ -1,13 +1,17 @@
 import { useMemo, useState } from 'react';
 import { useProfession } from '../context/ProfessionContext';
+import { useCollectionStore } from '../hooks/useCollectionStore';
 import { PROFESSION_TREES } from '../data/professions';
+
+const SKILLS = ['farming', 'fishing', 'foraging', 'mining', 'combat'];
+const MAX_LEVEL = 10;
 
 function prettyLabel(value) {
   if (!value) return 'None';
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
-function SkillRow({ skill, tree, value, onSet }) {
+function ProfessionRow({ skill, tree, value, onSet }) {
   const level10Options = value.level5 ? (tree.level10[value.level5] || []) : [];
 
   return (
@@ -45,19 +49,41 @@ function SkillRow({ skill, tree, value, onSet }) {
   );
 }
 
+function SkillLevelRow({ skill, level, onSet }) {
+  return (
+    <div className="prof-skill">
+      <div className="skill-level-row">
+        <span className="prof-skill-name">{prettyLabel(skill)}</span>
+        <select
+          className={level >= MAX_LEVEL ? 'skill-level-maxed' : ''}
+          value={level}
+          onChange={(e) => onSet(skill, Number(e.target.value))}
+        >
+          {Array.from({ length: MAX_LEVEL + 1 }, (_, i) => (
+            <option key={i} value={i}>Lv {i}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+  );
+}
+
 export default function ProfessionConfigurator() {
   const [open, setOpen] = useState(false);
+  const [tab, setTab] = useState('skills');
   const { selection, setSkillSelection, resetSelection } = useProfession();
+  const skillLevels = useCollectionStore((s) => s.skillLevels);
+  const setSkillLevel = useCollectionStore((s) => s.setSkillLevel);
 
-  const activeCount = useMemo(
-    () => Object.values(selection).reduce((acc, s) => acc + (s.level5 ? 1 : 0) + (s.level10 ? 1 : 0), 0),
-    [selection],
+  const maxedSkills = useMemo(
+    () => SKILLS.filter((s) => (skillLevels[s] || 0) >= MAX_LEVEL).length,
+    [skillLevels],
   );
 
   return (
     <div className="profession-fab-wrap">
       <button className="profession-fab" onClick={() => setOpen((v) => !v)}>
-        Professions ({activeCount})
+        Skills &amp; Professions
       </button>
 
       {open && (
@@ -65,24 +91,59 @@ export default function ProfessionConfigurator() {
           <div className="profession-backdrop" onClick={() => setOpen(false)} />
           <div className="profession-popout">
             <div className="profession-popout-head">
-              <h3>Profession Setup</h3>
-              <button className="profession-close" onClick={() => setOpen(false)} aria-label="Close professions panel">×</button>
+              <h3>Character Setup</h3>
+              <button className="profession-close" onClick={() => setOpen(false)} aria-label="Close panel">×</button>
+            </div>
+
+            <div className="profession-tabs">
+              <button
+                className={`profession-tab${tab === 'skills' ? ' active' : ''}`}
+                onClick={() => setTab('skills')}
+              >
+                Skills ({maxedSkills}/{SKILLS.length})
+              </button>
+              <button
+                className={`profession-tab${tab === 'professions' ? ' active' : ''}`}
+                onClick={() => setTab('professions')}
+              >
+                Professions
+              </button>
             </div>
 
             <div className="profession-popout-body">
-              {Object.entries(PROFESSION_TREES).map(([skill, tree]) => (
-                <SkillRow
-                  key={skill}
-                  skill={skill}
-                  tree={tree}
-                  value={selection[skill]}
-                  onSet={setSkillSelection}
-                />
-              ))}
+              {tab === 'skills' && (
+                <>
+                  {SKILLS.map((skill) => (
+                    <SkillLevelRow
+                      key={skill}
+                      skill={skill}
+                      level={skillLevels[skill] || 0}
+                      onSet={setSkillLevel}
+                    />
+                  ))}
+                  <p className="prof-hint">
+                    Set each skill to its in-game level. All five at Lv 10 completes the Farmer Level goal.
+                  </p>
+                </>
+              )}
 
-              <div className="profession-actions">
-                <button className="abtn" onClick={resetSelection}>Reset All</button>
-              </div>
+              {tab === 'professions' && (
+                <>
+                  {Object.entries(PROFESSION_TREES).map(([skill, tree]) => (
+                    <ProfessionRow
+                      key={skill}
+                      skill={skill}
+                      tree={tree}
+                      value={selection[skill]}
+                      onSet={setSkillSelection}
+                    />
+                  ))}
+
+                  <div className="profession-actions">
+                    <button className="abtn" onClick={resetSelection}>Reset All</button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </>

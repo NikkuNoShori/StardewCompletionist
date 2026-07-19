@@ -20,6 +20,7 @@ export const useCollectionStore = create(
       monsterChecked: {},
       catalogChecked: {},
       birthdayChecked: {},
+      skillLevels: {},   // skill name -> level (0-10)
 
       // UI state
       collapsedSections: {},
@@ -37,6 +38,17 @@ export const useCollectionStore = create(
           map[itemId] = true;
         }
         return { [storeKey]: map };
+      }),
+
+      // Set a skill's level (0-10); 0 clears it
+      setSkillLevel: (skill, level) => set((state) => {
+        const map = { ...state.skillLevels };
+        if (!level) {
+          delete map[skill];
+        } else {
+          map[skill] = level;
+        }
+        return { skillLevels: map };
       }),
 
       // UI actions
@@ -95,6 +107,7 @@ export const useCollectionStore = create(
           'fishChecked', 'museumChecked', 'shippingChecked', 'craftingChecked',
           'walnutChecked', 'stardropChecked', 'secretNoteChecked', 'journalScrapChecked',
           'fieldOfficeChecked', 'monsterChecked', 'catalogChecked', 'birthdayChecked',
+          'skillLevels',
         ];
         keys.forEach((k) => {
           if (data[k] && Object.keys(data[k]).length > 0) update[k] = data[k];
@@ -120,6 +133,7 @@ export const useCollectionStore = create(
           monsterChecked: s.monsterChecked,
           catalogChecked: s.catalogChecked,
           birthdayChecked: s.birthdayChecked,
+          skillLevels: s.skillLevels,
         };
       },
     }),
@@ -141,6 +155,7 @@ export const useCollectionStore = create(
         monsterChecked: state.monsterChecked,
         catalogChecked: state.catalogChecked,
         birthdayChecked: state.birthdayChecked,
+        skillLevels: state.skillLevels,
         collapsedSections: state.collapsedSections,
         searchQueries: state.searchQueries,
         filters: state.filters,

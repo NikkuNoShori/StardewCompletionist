@@ -24,6 +24,7 @@ export function useCollectionSync() {
   const monsterChecked = useCollectionStore((s) => s.monsterChecked);
   const catalogChecked = useCollectionStore((s) => s.catalogChecked);
   const birthdayChecked = useCollectionStore((s) => s.birthdayChecked);
+  const skillLevels = useCollectionStore((s) => s.skillLevels);
 
   const debounceRef = useRef(null);
   const initialLoadDone = useRef(false);
@@ -66,6 +67,6 @@ export function useCollectionSync() {
     recipeChecked, ingredientsChecked, bundleChecked,
     fishChecked, museumChecked, shippingChecked, craftingChecked,
     walnutChecked, stardropChecked, secretNoteChecked, journalScrapChecked,
-    fieldOfficeChecked, monsterChecked, catalogChecked, birthdayChecked, user,
+    fieldOfficeChecked, monsterChecked, catalogChecked, birthdayChecked, skillLevels, user,
   ]);
 }
